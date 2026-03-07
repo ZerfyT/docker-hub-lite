@@ -1,17 +1,11 @@
-// src/App.tsx
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Button } from "@/components/ui/button"; // Shadcn component
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-// Define the shape based on bollard's ContainerSummary
-interface Container {
-  Id: string;
-  Names: string[];
-  Image: string;
-  State: string;
-  Status: string;
-}
+import { AppLayout } from "@/components/layout/AppLayout";
+import { MetricCard } from "@/components/dashboard/MetricCard";
+import { ResourceChart } from "@/components/dashboard/ResourceChart";
+import { ContainerTable, Container } from "@/components/dashboard/ContainerTable";
+import { Button } from "@/components/ui/button";
+import { Box, Layers, HardDrive, Activity, Trash2 } from "lucide-react";
 
 function App() {
   const [containers, setContainers] = useState<Container[]>([]);
@@ -25,56 +19,71 @@ function App() {
     }
   };
 
-  const startContainer = async (id: string) => {
-    try {
-      await invoke("start_container", { id });
-      fetchContainers(); // Refresh list
-    } catch (error) {
-      console.error("Failed to start:", error);
-    }
-  };
-
   useEffect(() => {
     fetchContainers();
-    // Set up polling or Tauri events for live updates here
     const interval = setInterval(fetchContainers, 3000);
     return () => clearInterval(interval);
   }, []);
 
+  const runningCount = containers.filter((c) => c.State === "running").length;
+
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Docker Control Center</h1>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Image</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {containers.map((c) => (
-            <TableRow key={c.Id}>
-              <TableCell>{c.Names[0].replace("/", "")}</TableCell>
-              <TableCell>{c.Image}</TableCell>
-              <TableCell>
-                <span className={c.State === "running" ? "text-green-500" : "text-red-500"}>
-                  {c.Status}
-                </span>
-              </TableCell>
-              <TableCell>
-                {c.State !== "running" && (
-                  <Button variant="outline" size="sm" onClick={() => startContainer(c.Id)}>
-                    Start
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <AppLayout>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">System Overview</h2>
+          <p className="text-muted-foreground">Monitor and manage your host engine.</p>
+        </div>
+        <Button variant="destructive" className="gap-2">
+          <Trash2 className="h-4 w-4" />
+          System Prune
+        </Button>
+      </div>
+
+      {/* Metrics Row */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Running Containers"
+          value={`${runningCount} / ${containers.length}`}
+          description="Total active vs installed"
+          icon={Box}
+        />
+        <MetricCard
+          title="Total Images"
+          value="24"
+          description="12.4 GB Space Used"
+          icon={Layers}
+        />
+        <MetricCard
+          title="Volume Storage"
+          value="4.5 GB"
+          description="Across 8 volumes"
+          icon={HardDrive}
+        />
+        <MetricCard
+          title="System Health"
+          value="Healthy"
+          description="Engine behaving normally"
+          icon={Activity}
+        />
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <div className="lg:col-span-7">
+          <ResourceChart />
+        </div>
+      </div>
+
+      {/* Quick Access Row */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <h3 className="text-lg font-medium">Top Containers</h3>
+          <p className="text-sm text-muted-foreground cursor-pointer hover:underline">View All</p>
+        </div>
+        <ContainerTable containers={containers} onRefresh={fetchContainers} />
+      </div>
+    </AppLayout>
   );
 }
 
