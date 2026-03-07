@@ -7,21 +7,31 @@ import { ContainerTable, Container } from "@/components/dashboard/ContainerTable
 import { Button } from "@/components/ui/button";
 import { Box, Layers, HardDrive, Activity, Trash2 } from "lucide-react";
 
+interface SystemInfo {
+  total_images: number;
+  volume_storage: string;
+  system_health: string;
+}
+
 function App() {
   const [containers, setContainers] = useState<Container[]>([]);
+  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
 
-  const fetchContainers = async () => {
+  const fetchData = async () => {
     try {
-      const data = await invoke<Container[]>("get_containers");
-      setContainers(data);
+      const portsData = await invoke<Container[]>("get_containers");
+      setContainers(portsData);
+      
+      const sysData = await invoke<SystemInfo>("get_system_info");
+      setSystemInfo(sysData);
     } catch (error) {
-      console.error("Failed to fetch containers:", error);
+      console.error("Failed to fetch data:", error);
     }
   };
 
   useEffect(() => {
-    fetchContainers();
-    const interval = setInterval(fetchContainers, 3000);
+    fetchData();
+    const interval = setInterval(fetchData, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -50,20 +60,20 @@ function App() {
         />
         <MetricCard
           title="Total Images"
-          value="24"
-          description="12.4 GB Space Used"
+          value={systemInfo?.total_images.toString() || "..."}
+          description="Local Engine"
           icon={Layers}
         />
         <MetricCard
           title="Volume Storage"
-          value="4.5 GB"
-          description="Across 8 volumes"
+          value={systemInfo ? systemInfo.volume_storage.split(" ")[1] : "..."}
+          description={systemInfo?.volume_storage || "..."}
           icon={HardDrive}
         />
         <MetricCard
           title="System Health"
-          value="Healthy"
-          description="Engine behaving normally"
+          value={systemInfo?.system_health || "..."}
+          description={systemInfo?.system_health === "Healthy" ? "Engine behaving normally" : "Connection issue"}
           icon={Activity}
         />
       </div>
@@ -81,7 +91,7 @@ function App() {
           <h3 className="text-lg font-medium">Top Containers</h3>
           <p className="text-sm text-muted-foreground cursor-pointer hover:underline">View All</p>
         </div>
-        <ContainerTable containers={containers} onRefresh={fetchContainers} />
+        <ContainerTable containers={containers} onRefresh={fetchData} />
       </div>
     </AppLayout>
   );

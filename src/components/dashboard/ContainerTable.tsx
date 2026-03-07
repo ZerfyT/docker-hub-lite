@@ -36,6 +36,16 @@ export function ContainerTable({ containers, onRefresh }: ContainerTableProps) {
     }
   };
 
+  const stopContainer = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await invoke("stop_container", { id });
+      onRefresh();
+    } catch (error) {
+      console.error("Failed to stop:", error);
+    }
+  };
+
   const getStatusColor = (state: string) => {
     switch (state.toLowerCase()) {
       case "running":
@@ -101,6 +111,7 @@ export function ContainerTable({ containers, onRefresh }: ContainerTableProps) {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => stopContainer(c.Id, e)}
                         title="Stop"
                       >
                         <Square className="h-4 w-4 fill-current" />
