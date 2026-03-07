@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Play, Square, Terminal as TerminalIcon } from "lucide-react";
+import { PlayIcon, SquareIcon, TerminalIcon } from "@phosphor-icons/react";
 import { invoke } from "@tauri-apps/api/core";
 
 // Define the shape based on bollard's ContainerSummary
@@ -104,7 +104,7 @@ export function ContainerTable({ containers, onRefresh }: ContainerTableProps) {
                         onClick={(e) => startContainer(c.Id, e)}
                         title="Start"
                       >
-                        <Play className="h-4 w-4 fill-current" />
+                        <PlayIcon className="h-4 w-4 fill-current" />
                       </Button>
                     ) : (
                       <Button
@@ -114,7 +114,7 @@ export function ContainerTable({ containers, onRefresh }: ContainerTableProps) {
                         onClick={(e) => stopContainer(c.Id, e)}
                         title="Stop"
                       >
-                        <Square className="h-4 w-4 fill-current" />
+                        <SquareIcon className="h-4 w-4 fill-current" />
                       </Button>
                     )}
                     <Button

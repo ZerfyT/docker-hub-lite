@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
+import { Icon } from "@phosphor-icons/react";
 
 interface MetricCardProps {
   title: string;
   value: string | number;
   description?: string;
-  icon: LucideIcon;
+  icon: Icon;
   trend?: "up" | "down" | "neutral";
 }
 
