@@ -110,7 +110,7 @@ export function Containers() {
       <div className="flex flex-col gap-2 relative">
         <div className="flex items-center gap-2">
           <h2 className="text-2xl font-bold tracking-tight">Containers</h2>
-          <span className="text-xs text-blue-400 cursor-pointer font-medium hover:underline pb-1">Give feedback</span>
+          <span className="text-xs text-primary cursor-pointer font-medium hover:underline pb-1">Give feedback</span>
         </div>
       </div>
 
@@ -119,7 +119,7 @@ export function Containers() {
           <span className="text-sm font-semibold flex items-center gap-1.5">
             Container CPU usage <Info className="h-4 w-4 text-muted-foreground" />
           </span>
-          <span className="text-[#00B480] font-medium text-sm mt-1 flex gap-1">
+          <span className="text-primary font-medium text-sm mt-1 flex gap-1">
             {totalCPU.toFixed(2)}% <span className="text-muted-foreground">/ {(cpuCores * 100).toFixed(0)}% <span className="text-[13px]">({cpuCores} CPUs available)</span></span>
           </span>
         </div>
@@ -127,7 +127,7 @@ export function Containers() {
           <span className="text-sm font-semibold flex items-center gap-1.5">
             Container memory usage <Info className="h-4 w-4 text-muted-foreground" />
           </span>
-          <span className="text-[#00B480] font-medium text-sm mt-1 flex gap-1">
+          <span className="text-primary font-medium text-sm mt-1 flex gap-1">
              {formatBytes(totalMem)} <span className="text-muted-foreground">/ {formatBytes(memLimit)}</span>
           </span>
         </div>
@@ -140,7 +140,7 @@ export function Containers() {
             <Input
               type="search"
               placeholder="Search"
-              className="pl-9 bg-background border-[#444] focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-primary h-9"
+              className="pl-9 bg-background border-border focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-primary h-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -165,15 +165,15 @@ export function Containers() {
             <Button size="icon" variant="destructive" className="h-9 w-9" onClick={() => handleBulkAction("remove_container")} title="Delete">
               <Trash className="h-4 w-4" />
             </Button>
-            <div className="flex items-center border border-[#444] rounded-md overflow-hidden bg-background">
-              <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-green-500 hover:text-green-400 hover:bg-muted" onClick={() => handleBulkAction("start_container")} title="Start">
+            <div className="flex items-center border border-border rounded-md overflow-hidden bg-background">
+              <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-primary hover:text-primary/80 hover:bg-muted" onClick={() => handleBulkAction("start_container")} title="Start">
                 <PlayIcon className="h-4 w-4 fill-current" />
               </Button>
-              <div className="w-[1px] h-9 bg-[#444]" />
+              <div className="w-[1px] h-9 bg-border" />
               <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-muted-foreground hover:bg-muted" onClick={() => handleBulkAction("pause_container")} title="Pause">
                 <Pause className="h-4 w-4 fill-current" />
               </Button>
-              <div className="w-[1px] h-9 bg-[#444]" />
+              <div className="w-[1px] h-9 bg-border" />
               <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-muted-foreground hover:bg-muted" onClick={() => handleBulkAction("stop_container")} title="Stop">
                 <SquareIcon className="h-4 w-4 fill-current" />
               </Button>

@@ -48,33 +48,33 @@ export function ExecTab({ containerId, isRunning }: { containerId: string, isRun
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#1e1e1e] border-t border-border/50">
+    <div className="flex flex-col h-full bg-muted/10 border-t border-border/50">
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-4">
           {history.length === 0 && (
-            <div className="text-gray-500 text-xs font-mono mb-4">
+            <div className="text-muted-foreground text-xs font-mono mb-4">
               Type a command to execute it inside the container using `sh -c`. This is a non-interactive shell.
             </div>
           )}
           {history.map((entry, i) => (
             <div key={i} className="font-mono text-[13px]">
-              <div className="text-blue-400 font-bold">$ {entry.cmd}</div>
-              <pre className={`whitespace-pre-wrap leading-relaxed mt-1 ${entry.error ? 'text-red-400' : 'text-gray-300'}`}>
+              <div className="text-primary font-bold">$ {entry.cmd}</div>
+              <pre className={`whitespace-pre-wrap leading-relaxed mt-1 ${entry.error ? 'text-destructive' : 'text-foreground'}`}>
                 {entry.out || "\n"}
               </pre>
             </div>
           ))}
-          {isLoading && <div className="text-gray-500 text-sm animate-pulse font-mono">Running...</div>}
+          {isLoading && <div className="text-muted-foreground text-sm animate-pulse font-mono">Running...</div>}
         </div>
       </ScrollArea>
-      <div className="p-3 border-t border-[#333] bg-[#2d2d2d]">
+      <div className="p-3 border-t bg-muted/20">
         <form onSubmit={runCommand} className="flex items-center gap-2">
-          <span className="text-gray-400 font-bold font-mono pl-2">$</span>
+          <span className="text-muted-foreground font-bold font-mono pl-2">$</span>
           <Input 
             value={command} 
             onChange={(e) => setCommand(e.target.value)}
             placeholder="ls -la /" 
-            className="flex-1 bg-[#1e1e1e] border-[#444] text-gray-200 font-mono h-9"
+            className="flex-1 bg-background border-border text-foreground font-mono h-9"
             disabled={isLoading}
             autoFocus
           />

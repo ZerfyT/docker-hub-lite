@@ -68,11 +68,27 @@ interface AppState {
 
   // Fetch all background Data
   fetchAllData: () => Promise<void>;
+
+  // Theme
+  theme: string;
+  setTheme: (theme: string) => void;
+  mode: "light" | "dark";
+  setMode: (mode: "light" | "dark") => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
   isPolling: true,
   setIsPolling: (isPolling) => set({ isPolling }),
+  theme: localStorage.getItem("docker-lite-theme") || "zinc",
+  setTheme: (theme) => {
+    localStorage.setItem("docker-lite-theme", theme);
+    set({ theme });
+  },
+  mode: (localStorage.getItem("docker-lite-mode") as "light" | "dark") || "dark",
+  setMode: (mode) => {
+    localStorage.setItem("docker-lite-mode", mode);
+    set({ mode });
+  },
 
   dockerState: "Disconnected",
   dockerStateError: "",

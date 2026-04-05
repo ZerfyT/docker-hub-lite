@@ -26,7 +26,7 @@ export function LogsTab({ containerId }: { containerId: string }) {
   }, [containerId]);
 
   return (
-    <div className="flex flex-col h-full bg-[#1e1e1e] border-t border-border/50 relative">
+    <div className="flex flex-col h-full bg-muted/10 border-t border-border/50 relative">
       {/* Small refresh button floating top right */}
       <div className="absolute top-2 right-4 z-10">
         <Button 

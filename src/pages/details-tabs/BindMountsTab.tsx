@@ -19,7 +19,7 @@ interface Mount {
 export function BindMountsTab({ mounts }: { mounts: Mount[] }) {
   if (!mounts || mounts.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center border-t border-border/50 bg-[#1e1e1e]/50 text-muted-foreground">
+      <div className="flex h-full items-center justify-center border-t border-border/50 bg-muted/10 text-muted-foreground">
         This container has no bind mounts.
       </div>
     );

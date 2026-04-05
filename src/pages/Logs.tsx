@@ -75,8 +75,8 @@ export function Logs() {
         </div>
 
         {/* Right Side: Log Viewer */}
-        <div className="flex-1 border rounded-md bg-[#1e1e1e] flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between p-3 border-b border-[#333] bg-[#2d2d2d] text-gray-200">
+        <div className="flex-1 border rounded-md bg-muted/10 flex flex-col overflow-hidden">
+          <div className="flex items-center justify-between p-3 border-b bg-muted/20 text-foreground">
             <div className="font-mono text-sm font-medium">
               {selectedContainer 
                 ? containers.find(c => c.Id === selectedContainer)?.Names?.[0]?.replace("/", "") || selectedContainer.substring(0, 12)

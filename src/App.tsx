@@ -10,8 +10,23 @@ import { Logs } from "@/pages/Logs";
 import { SystemInfo } from "@/pages/SystemInfo";
 import { AppSettings } from "@/pages/AppSettings";
 import { Templates } from "@/pages/Templates";
+import { useStore } from "@/store/useStore";
+import { useEffect } from "react";
 
 function App() {
+  const { theme, mode } = useStore();
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.dataset.theme = theme;
+    
+    if (mode === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [theme, mode]);
+
   return (
     <BrowserRouter>
       <AppLayout>

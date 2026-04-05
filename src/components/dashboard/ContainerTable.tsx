@@ -171,7 +171,7 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
                   <TableCell className="text-muted-foreground truncate max-w-[150px]" title={c.Image}>
                     {c.Image}
                   </TableCell>
-                  <TableCell className="text-blue-400 font-mono hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); openInBrowser(c); }}>
+                  <TableCell className="text-primary font-mono hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); openInBrowser(c); }}>
                     {c.Ports?.map(p => p.PublicPort ? `${p.PublicPort}:${p.PrivatePort}` : p.PrivatePort).join(", ") || "-"}
                   </TableCell>
                   <TableCell>
@@ -195,7 +195,7 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-green-500 hover:text-green-600"
+                          className="h-8 w-8 text-primary hover:text-primary/80"
                           onClick={() => runAction("start_container", c.Id)}
                           title="Start"
                         >
