@@ -105,6 +105,92 @@ async fn remove_container(state: State<'_, AppState>, id: String) -> Result<Stri
     }
 }
 
+// Command to pause a container
+#[tauri::command]
+async fn pause_container(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    match state.docker.pause_container(&id).await {
+        Ok(_) => Ok(format!("Container {} paused", id)),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+// Command to unpause a container
+#[tauri::command]
+async fn unpause_container(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    match state.docker.unpause_container(&id).await {
+        Ok(_) => Ok(format!("Container {} unpaused", id)),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+// Command to restart a container
+#[tauri::command]
+async fn restart_container(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    match state.docker.restart_container(&id, None).await {
+        Ok(_) => Ok(format!("Container {} restarted", id)),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+// Command to inspect a container (returns JSON string)
+#[tauri::command]
+async fn inspect_container(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    match state.docker.inspect_container(&id, None).await {
+        Ok(info) => Ok(serde_json::to_string(&info).unwrap_or_else(|_| "{}".to_string())),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+// Command to fetch one-shot stats
+#[tauri::command]
+async fn get_container_stats_once(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    use futures_util::StreamExt;
+    let options = Some(bollard::container::StatsOptions {
+        stream: false,
+        one_shot: true,
+    });
+    
+    let mut stats_stream = state.docker.stats(&id, options);
+    
+    if let Some(result) = stats_stream.next().await {
+        match result {
+            Ok(stats) => Ok(serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())),
+            Err(e) => Err(e.to_string())
+        }
+    } else {
+        Err("Failed to fetch stats".to_string())
+    }
+}
+
+// Command to execute command inside a container
+#[tauri::command]
+async fn exec_command(state: State<'_, AppState>, id: String, cmd: Vec<String>) -> Result<String, String> {
+    use futures_util::StreamExt;
+    let config = bollard::exec::CreateExecOptions {
+        cmd: Some(cmd),
+        attach_stdout: Some(true),
+        attach_stderr: Some(true),
+        ..Default::default()
+    };
+    
+    match state.docker.create_exec(&id, config).await {
+        Ok(exec) => {
+            match state.docker.start_exec(&exec.id, None).await {
+                Ok(bollard::exec::StartExecResults::Attached { mut output, .. }) => {
+                    let mut result = String::new();
+                    while let Some(Ok(msg)) = output.next().await {
+                        result.push_str(&msg.to_string());
+                    }
+                    Ok(result)
+                },
+                Ok(bollard::exec::StartExecResults::Detached) => Ok("Detached".to_string()),
+                Err(e) => Err(e.to_string())
+            }
+        },
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 // Command to fetch images
 #[tauri::command]
 async fn get_images(
@@ -238,6 +324,13 @@ fn main() {
             get_containers,
             start_container,
             stop_container,
+            remove_container,
+            pause_container,
+            unpause_container,
+            restart_container,
+            inspect_container,
+            get_container_stats_once,
+            exec_command,
             get_system_info,
             get_images,
             remove_image,

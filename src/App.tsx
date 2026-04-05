@@ -2,6 +2,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Dashboard } from "@/pages/Dashboard";
 import { Containers } from "@/pages/Containers";
+import { ContainerDetails } from "@/pages/ContainerDetails";
 import { Images } from "@/pages/Images";
 import { Volumes } from "@/pages/Volumes";
 import { Networks } from "@/pages/Networks";
@@ -18,6 +19,7 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/containers" element={<Containers />} />
+          <Route path="/containers/:id" element={<ContainerDetails />} />
           <Route path="/images" element={<Images />} />
           <Route path="/volumes" element={<Volumes />} />
           <Route path="/networks" element={<Networks />} />
