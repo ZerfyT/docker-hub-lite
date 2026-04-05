@@ -95,7 +95,7 @@ export function Images() {
                         <span className="text-xs text-muted-foreground">{tag}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-muted-foreground">
                       {shortId}
                     </TableCell>
                     <TableCell>{createdDate}</TableCell>

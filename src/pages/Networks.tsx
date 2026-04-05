@@ -80,7 +80,7 @@ export function Networks() {
                 return (
                   <TableRow key={net.Id}>
                     <TableCell className="font-medium">{net.Name}</TableCell>
-                    <TableCell className="font-mono text-sm text-muted-foreground">
+                    <TableCell className="text-sm text-muted-foreground">
                       {shortId}
                     </TableCell>
                     <TableCell>{net.Driver}</TableCell>

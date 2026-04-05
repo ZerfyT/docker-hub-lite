@@ -32,7 +32,7 @@ export function LogsTab({ containerId }: { containerId: string }) {
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+          className="h-8 w-8 p-0 text-neutral-400 hover:text-white"
           onClick={fetchLogs}
           disabled={isRefreshing}
         >
@@ -40,7 +40,7 @@ export function LogsTab({ containerId }: { containerId: string }) {
         </Button>
       </div>
       <ScrollArea className="flex-1 p-4">
-        <pre className="text-[13px] font-mono text-gray-300 whitespace-pre-wrap wrap-break-word leading-relaxed">
+        <pre className="text-[13px] text-neutral-300 whitespace-pre-wrap wrap-break-word leading-relaxed">
           {logs || "No logs available."}
         </pre>
       </ScrollArea>

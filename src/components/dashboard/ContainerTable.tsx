@@ -165,13 +165,13 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
                       {c.Names[0]?.replace("/", "") || "Unnamed"}
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground font-mono">
+                  <TableCell className="text-muted-foreground">
                     {shortId}
                   </TableCell>
                   <TableCell className="text-muted-foreground truncate max-w-[150px]" title={c.Image}>
                     {c.Image}
                   </TableCell>
-                  <TableCell className="text-primary font-mono hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); openInBrowser(c); }}>
+                  <TableCell className="text-primary hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); openInBrowser(c); }}>
                     {c.Ports?.map(p => p.PublicPort ? `${p.PublicPort}:${p.PrivatePort}` : p.PrivatePort).join(", ") || "-"}
                   </TableCell>
                   <TableCell>

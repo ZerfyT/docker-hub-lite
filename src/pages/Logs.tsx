@@ -53,16 +53,15 @@ export function Logs() {
                 containers.map((c) => {
                   const name = c.Names?.[0]?.replace("/", "") || c.Id.substring(0, 12);
                   const isSelected = selectedContainer === c.Id;
-                  
+
                   return (
                     <button
                       key={c.Id}
                       onClick={() => setSelectedContainer(c.Id)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors text-left truncate ${
-                        isSelected 
-                          ? "bg-primary text-primary-foreground font-medium" 
-                          : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                      }`}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors text-left truncate ${isSelected
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
                     >
                       <CubeIcon className="h-4 w-4 shrink-0" />
                       <span className="truncate">{name}</span>
@@ -77,17 +76,17 @@ export function Logs() {
         {/* Right Side: Log Viewer */}
         <div className="flex-1 border rounded-md bg-muted/10 flex flex-col overflow-hidden">
           <div className="flex items-center justify-between p-3 border-b bg-muted/20 text-foreground">
-            <div className="font-mono text-sm font-medium">
-              {selectedContainer 
+            <div className="text-sm font-medium">
+              {selectedContainer
                 ? containers.find(c => c.Id === selectedContainer)?.Names?.[0]?.replace("/", "") || selectedContainer.substring(0, 12)
                 : "No Container Selected"
               }
             </div>
-            
+
             {selectedContainer && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="h-8 w-8 p-0 text-gray-400 hover:text-white"
                 onClick={() => fetchLogs(selectedContainer)}
                 disabled={isRefreshing}
@@ -97,7 +96,7 @@ export function Logs() {
             )}
           </div>
           <ScrollArea className="flex-1 p-4">
-            <pre className="text-xs font-mono text-green-400 whitespace-pre-wrap wrap-break-word leading-relaxed">
+            <pre className="text-xs text-green-400 whitespace-pre-wrap wrap-break-word leading-relaxed">
               {logs || "No logs available."}
             </pre>
           </ScrollArea>

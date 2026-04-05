@@ -100,7 +100,7 @@ export function ContainerDetails() {
           <div>
             <h2 className="text-xl font-bold tracking-tight">{name}</h2>
             <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-              <span className="font-mono">{shortId}</span>
+              <span>{shortId}</span>
               <span>{image}</span>
             </div>
           </div>
@@ -155,9 +155,8 @@ export function ContainerDetails() {
             <button
               key={tab.id}
               onClick={() => setSearchParams({ tab: tab.id })}
-              className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${
-                isActive ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
+              className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${isActive ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
             >
               {tab.label}
             </button>

@@ -74,7 +74,7 @@ export function Volumes() {
             ) : (
               filteredVolumes.map((vol) => (
                 <TableRow key={vol.Name}>
-                  <TableCell className="font-mono text-sm font-medium">
+                  <TableCell className="text-sm font-medium">
                     {vol.Name.substring(0, 24)}...
                   </TableCell>
                   <TableCell>{vol.Driver}</TableCell>

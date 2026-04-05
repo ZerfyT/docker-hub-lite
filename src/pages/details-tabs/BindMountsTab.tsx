@@ -41,8 +41,8 @@ export function BindMountsTab({ mounts }: { mounts: Mount[] }) {
           {mounts.map((m, i) => (
             <TableRow key={i}>
               <TableCell className="font-medium">{m.Type}</TableCell>
-              <TableCell className="text-muted-foreground font-mono text-xs">{m.Source}</TableCell>
-              <TableCell className="font-mono text-xs">{m.Destination}</TableCell>
+              <TableCell className="text-muted-foreground text-xs">{m.Source}</TableCell>
+              <TableCell className="text-xs">{m.Destination}</TableCell>
               <TableCell>{m.Mode || "-"}</TableCell>
               <TableCell>{m.RW ? "Yes" : "No"}</TableCell>
             </TableRow>

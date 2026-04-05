@@ -28,9 +28,9 @@ export function FilesTab({ containerId, isRunning }: { containerId: string, isRu
     setLoading(true);
     setError(null);
     try {
-      const output = await invoke<string>("exec_command", { 
-        id: containerId, 
-        cmd: ["ls", "-la", "--time-style=+%Y-%m-%d %H:%M", dir] 
+      const output = await invoke<string>("exec_command", {
+        id: containerId,
+        cmd: ["ls", "-la", "--time-style=+%Y-%m-%d %H:%M", dir]
       });
       // Parse ls -la output
       const lines = output.trim().split("\n");
@@ -38,14 +38,14 @@ export function FilesTab({ containerId, isRunning }: { containerId: string, isRu
 
       for (const line of lines) {
         if (line.startsWith("total")) continue;
-        
+
         // Example: drwxr-xr-x 1 root root 4096 Apr  5 03:29 bin
         // Using a basic regex to match standard unix ls -la
         const parts = line.split(/\s+/);
         if (parts.length >= 8) {
           const name = parts.slice(7).join(" ");
           if (name === "." || name === "..") continue;
-          
+
           parsedFiles.push({
             permissions: parts[0],
             links: parts[1],
@@ -60,7 +60,7 @@ export function FilesTab({ containerId, isRunning }: { containerId: string, isRu
           });
         }
       }
-      
+
       // Sort directories first
       parsedFiles.sort((a, b) => {
         if (a.isDirectory && !b.isDirectory) return -1;
@@ -113,14 +113,14 @@ export function FilesTab({ containerId, isRunning }: { containerId: string, isRu
         <Button variant="ghost" size="icon" onClick={() => fetchFiles(currentPath)} disabled={loading}>
           <ArrowClockwise className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
         </Button>
-        <div className="flex-1 font-mono text-sm bg-background p-1.5 px-3 rounded-md border min-h-[32px] flex items-center overflow-x-auto truncate">
+        <div className="flex-1 text-sm bg-background p-1.5 px-3 rounded-md border min-h-[32px] flex items-center overflow-x-auto truncate">
           {currentPath}
         </div>
       </div>
 
       <ScrollArea className="flex-1 bg-card">
         {error ? (
-          <div className="p-4 text-red-500 text-sm font-mono">{error}</div>
+          <div className="p-4 text-red-500 text-sm">{error}</div>
         ) : (
           <div className="w-full text-sm">
             <div className="grid grid-cols-[auto_1fr_100px_150px] gap-4 p-2 border-b text-muted-foreground font-semibold px-4 sticky top-0 bg-card z-10 shadow-sm">
@@ -130,8 +130,8 @@ export function FilesTab({ containerId, isRunning }: { containerId: string, isRu
               <div>Modified</div>
             </div>
             {files.map((f, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className={`grid grid-cols-[auto_1fr_100px_150px] gap-4 p-2 px-4 border-b border-border/40 hover:bg-muted/40 transition-colors ${f.isDirectory || f.isSymlink ? 'cursor-pointer' : ''}`}
                 onClick={() => handleNavigateIn(f.name, f.isDirectory || f.isSymlink)}
               >
@@ -141,10 +141,10 @@ export function FilesTab({ containerId, isRunning }: { containerId: string, isRu
                 <div className={`truncate ${f.isDirectory ? 'font-medium text-foreground' : 'text-muted-foreground font-medium'}`}>
                   {f.name}
                 </div>
-                <div className="text-muted-foreground font-mono text-xs flex items-center">
+                <div className="text-muted-foreground text-xs flex items-center">
                   {f.isDirectory ? "-" : f.size}
                 </div>
-                <div className="text-muted-foreground font-mono text-xs flex items-center">
+                <div className="text-muted-foreground text-xs flex items-center">
                   {f.date} {f.time}
                 </div>
               </div>
