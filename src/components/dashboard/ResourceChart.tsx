@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Area,
@@ -8,25 +10,50 @@ import {
   YAxis,
 } from "recharts";
 
-// Mock data to simulate live CPU and Memory usage
-const generateData = () => {
-  const data = [];
-  const now = new Date().getTime();
-  for (let i = 60; i >= 0; i--) {
-    data.push({
-      time: new Date(now - i * 1000).toLocaleTimeString([], {
-        second: "2-digit",
-      }),
-      cpu: Math.floor(Math.random() * 40) + 10,
-      memory: Math.floor(Math.random() * 30) + 40,
-    });
-  }
-  return data;
-};
+interface HostStats {
+  cpu: number;
+  memory: number;
+}
 
-const data = generateData();
+interface ChartDataPoint {
+  time: string;
+  cpu: number;
+  memory: number;
+}
 
 export function ResourceChart() {
+  const [data, setData] = useState<ChartDataPoint[]>([]);
+
+  useEffect(() => {
+    // Pre-fill array with empty data to avoid resizing jumps
+    const initialData = Array.from({ length: 60 }).map((_, i) => ({
+      time: new Date(Date.now() - (60 - i) * 1000).toLocaleTimeString([], { second: "2-digit" }),
+      cpu: 0,
+      memory: 0,
+    }));
+    setData(initialData);
+
+    const intervalId = setInterval(async () => {
+      try {
+        const stats = await invoke<HostStats>("get_host_stats");
+
+        setData((prevData) => {
+          const newData = [...prevData.slice(1)];
+          newData.push({
+            time: new Date().toLocaleTimeString([], { second: "2-digit" }),
+            cpu: Math.round(stats.cpu),
+            memory: Math.round(stats.memory),
+          });
+          return newData;
+        });
+      } catch (error) {
+        console.error("Failed to fetch host stats:", error);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <Card className="shadow-sm">
       <CardHeader>
@@ -54,8 +81,9 @@ export function ResourceChart() {
               <XAxis dataKey="time" hide />
               <YAxis
                 tickFormatter={(val) => `${val}%`}
-                axisLine={false}
-                tickLine={false}
+                axisLine={true}
+                tickLine={true}
+                domain={[0, 100]}
                 tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
               />
               <Tooltip
@@ -64,7 +92,6 @@ export function ResourceChart() {
                   borderColor: "var(--border)",
                   borderRadius: "8px",
                 }}
-                itemStyle={{ color: "var(--foreground)" }}
               />
               <Area
                 type="monotone"
@@ -74,7 +101,7 @@ export function ResourceChart() {
                 fillOpacity={1}
                 fill="url(#colorCpu)"
                 strokeWidth={2}
-                animationDuration={0}
+                isAnimationActive={false}
               />
               <Area
                 type="monotone"
@@ -84,7 +111,7 @@ export function ResourceChart() {
                 fillOpacity={1}
                 fill="url(#colorMemory)"
                 strokeWidth={2}
-                animationDuration={0}
+                isAnimationActive={false}
               />
             </AreaChart>
           </ResponsiveContainer>

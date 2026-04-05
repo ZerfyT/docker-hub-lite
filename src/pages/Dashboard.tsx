@@ -28,6 +28,7 @@ export function Dashboard() {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
 
   const fetchData = async () => {
+    console.log("Fetching data");
     try {
       const portsData = await invoke<Container[]>("get_containers");
       setContainers(portsData);
@@ -41,6 +42,7 @@ export function Dashboard() {
 
   useEffect(() => {
     fetchData();
+    console.log("Data fetched");
     const interval = setInterval(fetchData, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -119,7 +121,7 @@ export function Dashboard() {
 
       {/* Charts Row */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div className="lg:col-span-7">
+        <div className="col-span-7">
           <ResourceChart />
         </div>
       </div>

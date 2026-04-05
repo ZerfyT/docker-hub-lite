@@ -26,4 +26,5 @@ bollard = "0.15" # The Rust Docker API client
 tokio = { version = "1", features = ["full"] }
 tauri-plugin-shell = "2"
 futures-util = "0.3.32"
+sysinfo = "0.38.3"
 

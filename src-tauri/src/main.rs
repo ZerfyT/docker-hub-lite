@@ -7,12 +7,14 @@ use bollard::models::ContainerSummary;
 use bollard::Docker;
 use tauri::State;
 
-// Define a struct to hold our Docker client state
-struct DockerState {
-    client: Docker,
+// Define a struct to hold our system state
+struct AppState {
+    docker: Docker,
+    sys_info: std::sync::Mutex<sysinfo::System>,
 }
 
 use serde::{Deserialize, Serialize};
+use sysinfo::System;
 
 #[derive(Serialize, Deserialize)]
 struct SystemInfo {
@@ -21,15 +23,21 @@ struct SystemInfo {
     system_health: String,
 }
 
+#[derive(Serialize, Deserialize)]
+struct HostStats {
+    cpu: f32,
+    memory: f32,
+}
+
 // Command to fetch containers
 #[tauri::command]
-async fn get_containers(state: State<'_, DockerState>) -> Result<Vec<ContainerSummary>, String> {
+async fn get_containers(state: State<'_, AppState>) -> Result<Vec<ContainerSummary>, String> {
     let options = Some(ListContainersOptions::<String> {
         all: true,
         ..Default::default()
     });
 
-    match state.client.list_containers(options).await {
+    match state.docker.list_containers(options).await {
         Ok(containers) => Ok(containers),
         Err(e) => Err(e.to_string()),
     }
@@ -37,9 +45,9 @@ async fn get_containers(state: State<'_, DockerState>) -> Result<Vec<ContainerSu
 
 // Command to fetch system stats
 #[tauri::command]
-async fn get_system_info(state: State<'_, DockerState>) -> Result<SystemInfo, String> {
+async fn get_system_info(state: State<'_, AppState>) -> Result<SystemInfo, String> {
     // Basic health check (if we get here, daemon is up)
-    let ping_result = state.client.ping().await;
+    let ping_result = state.docker.ping().await;
     let system_health = match ping_result {
         Ok(_) => "Healthy".to_string(),
         Err(_) => "Unhealthy".to_string(),
@@ -47,7 +55,7 @@ async fn get_system_info(state: State<'_, DockerState>) -> Result<SystemInfo, St
 
     // Images
     let images = state
-        .client
+        .docker
         .list_images(None::<bollard::image::ListImagesOptions<String>>)
         .await
         .unwrap_or_default();
@@ -55,7 +63,7 @@ async fn get_system_info(state: State<'_, DockerState>) -> Result<SystemInfo, St
 
     // Volumes (just hardcode space used for now, as Docker API df is complex via bollard)
     let volumes = state
-        .client
+        .docker
         .list_volumes(None::<bollard::volume::ListVolumesOptions<String>>)
         .await;
 
@@ -73,8 +81,8 @@ async fn get_system_info(state: State<'_, DockerState>) -> Result<SystemInfo, St
 
 // Command to start a container
 #[tauri::command]
-async fn start_container(state: State<'_, DockerState>, id: String) -> Result<String, String> {
-    match state.client.start_container::<String>(&id, None).await {
+async fn start_container(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    match state.docker.start_container::<String>(&id, None).await {
         Ok(_) => Ok(format!("Container {} started", id)),
         Err(e) => Err(e.to_string()),
     }
@@ -82,8 +90,8 @@ async fn start_container(state: State<'_, DockerState>, id: String) -> Result<St
 
 // Command to stop a container
 #[tauri::command]
-async fn stop_container(state: State<'_, DockerState>, id: String) -> Result<String, String> {
-    match state.client.stop_container(&id, None).await {
+async fn stop_container(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    match state.docker.stop_container(&id, None).await {
         Ok(_) => Ok(format!("Container {} stopped", id)),
         Err(e) => Err(e.to_string()),
     }
@@ -92,9 +100,13 @@ async fn stop_container(state: State<'_, DockerState>, id: String) -> Result<Str
 // Command to fetch images
 #[tauri::command]
 async fn get_images(
-    state: State<'_, DockerState>,
+    state: State<'_, AppState>,
 ) -> Result<Vec<bollard::models::ImageSummary>, String> {
-    match state.client.list_images(None::<bollard::image::ListImagesOptions<String>>).await {
+    match state
+        .docker
+        .list_images(None::<bollard::image::ListImagesOptions<String>>)
+        .await
+    {
         Ok(images) => Ok(images),
         Err(e) => Err(e.to_string()),
     }
@@ -102,8 +114,8 @@ async fn get_images(
 
 // Command to remove an image
 #[tauri::command]
-async fn remove_image(state: State<'_, DockerState>, id: String) -> Result<String, String> {
-    match state.client.remove_image(&id, None, None).await {
+async fn remove_image(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    match state.docker.remove_image(&id, None, None).await {
         Ok(_) => Ok(format!("Image {} removed", id)),
         Err(e) => Err(e.to_string()),
     }
@@ -111,10 +123,12 @@ async fn remove_image(state: State<'_, DockerState>, id: String) -> Result<Strin
 
 // Command to fetch volumes
 #[tauri::command]
-async fn get_volumes(
-    state: State<'_, DockerState>,
-) -> Result<Vec<bollard::models::Volume>, String> {
-    match state.client.list_volumes(None::<bollard::volume::ListVolumesOptions<String>>).await {
+async fn get_volumes(state: State<'_, AppState>) -> Result<Vec<bollard::models::Volume>, String> {
+    match state
+        .docker
+        .list_volumes(None::<bollard::volume::ListVolumesOptions<String>>)
+        .await
+    {
         Ok(res) => Ok(res.volumes.unwrap_or_default()),
         Err(e) => Err(e.to_string()),
     }
@@ -122,8 +136,8 @@ async fn get_volumes(
 
 // Command to remove a volume
 #[tauri::command]
-async fn remove_volume(state: State<'_, DockerState>, name: String) -> Result<String, String> {
-    match state.client.remove_volume(&name, None).await {
+async fn remove_volume(state: State<'_, AppState>, name: String) -> Result<String, String> {
+    match state.docker.remove_volume(&name, None).await {
         Ok(_) => Ok(format!("Volume {} removed", name)),
         Err(e) => Err(e.to_string()),
     }
@@ -131,10 +145,12 @@ async fn remove_volume(state: State<'_, DockerState>, name: String) -> Result<St
 
 // Command to fetch networks
 #[tauri::command]
-async fn get_networks(
-    state: State<'_, DockerState>,
-) -> Result<Vec<bollard::models::Network>, String> {
-    match state.client.list_networks(None::<bollard::network::ListNetworksOptions<String>>).await {
+async fn get_networks(state: State<'_, AppState>) -> Result<Vec<bollard::models::Network>, String> {
+    match state
+        .docker
+        .list_networks(None::<bollard::network::ListNetworksOptions<String>>)
+        .await
+    {
         Ok(networks) => Ok(networks),
         Err(e) => Err(e.to_string()),
     }
@@ -142,8 +158,8 @@ async fn get_networks(
 
 // Command to remove a network
 #[tauri::command]
-async fn remove_network(state: State<'_, DockerState>, id: String) -> Result<String, String> {
-    match state.client.remove_network(&id).await {
+async fn remove_network(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    match state.docker.remove_network(&id).await {
         Ok(_) => Ok(format!("Network {} removed", id)),
         Err(e) => Err(e.to_string()),
     }
@@ -151,7 +167,7 @@ async fn remove_network(state: State<'_, DockerState>, id: String) -> Result<Str
 
 // Command to fetch container logs
 #[tauri::command]
-async fn get_container_logs(state: State<'_, DockerState>, id: String) -> Result<String, String> {
+async fn get_container_logs(state: State<'_, AppState>, id: String) -> Result<String, String> {
     use futures_util::StreamExt;
     let options = Some(bollard::container::LogsOptions::<String> {
         stdout: true,
@@ -160,7 +176,7 @@ async fn get_container_logs(state: State<'_, DockerState>, id: String) -> Result
         ..Default::default()
     });
 
-    let mut logs_stream = state.client.logs(&id, options);
+    let mut logs_stream = state.docker.logs(&id, options);
     let mut all_logs = String::new();
 
     while let Some(log_result) = logs_stream.next().await {
@@ -173,13 +189,43 @@ async fn get_container_logs(state: State<'_, DockerState>, id: String) -> Result
     Ok(all_logs)
 }
 
+// Command to fetch host system stats
+#[tauri::command]
+fn get_host_stats(state: State<'_, AppState>) -> Result<HostStats, String> {
+    let mut sys = state.sys_info.lock().map_err(|e| e.to_string())?;
+
+    // Refresh CPU and memory info
+    sys.refresh_cpu_all();
+    sys.refresh_memory();
+
+    Ok(HostStats {
+        cpu: sys.global_cpu_usage(),
+        memory: (sys.used_memory() as f32 / sys.total_memory() as f32) * 100.0,
+    })
+}
+
+#[tauri::command]
+async fn get_docker_daemon_state(state: State<'_, AppState>) -> Result<String, String> {
+    match state.docker.info().await {
+        Ok(_) => Ok("Running".to_string()),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 fn main() {
     // Connect to the local Docker socket
     let docker = Docker::connect_with_local_defaults().expect("Failed to connect to Docker");
 
+    // Initialize sysinfo
+    let mut sys = System::new_all();
+    sys.refresh_cpu_all(); // First refresh to get a baseline
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .manage(DockerState { client: docker })
+        .manage(AppState {
+            docker,
+            sys_info: std::sync::Mutex::new(sys),
+        })
         .invoke_handler(tauri::generate_handler![
             get_containers,
             start_container,
@@ -191,7 +237,9 @@ fn main() {
             remove_volume,
             get_networks,
             remove_network,
-            get_container_logs
+            get_container_logs,
+            get_host_stats,
+            get_docker_daemon_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
