@@ -97,6 +97,14 @@ async fn stop_container(state: State<'_, AppState>, id: String) -> Result<String
     }
 }
 
+#[tauri::command]
+async fn remove_container(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    match state.docker.remove_container(&id, None).await {
+        Ok(_) => Ok(format!("Container {} removed", id)),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 // Command to fetch images
 #[tauri::command]
 async fn get_images(

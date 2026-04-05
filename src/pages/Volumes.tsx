@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,32 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface VolumeSummary {
-  Name: string;
-  Driver: string;
-  Mountpoint: string;
-  CreatedAt?: string;
-}
+import { useStore } from "@/store/useStore";
 
 export function Volumes() {
-  const [volumes, setVolumes] = useState<VolumeSummary[]>([]);
+  const { volumes, fetchVolumes } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
-
-  const fetchVolumes = async () => {
-    try {
-      const data = await invoke<VolumeSummary[]>("get_volumes");
-      setVolumes(data || []);
-    } catch (error) {
-      console.error("Failed to fetch volumes:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchVolumes();
-    const interval = setInterval(fetchVolumes, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const removeVolume = async (name: string) => {
     try {

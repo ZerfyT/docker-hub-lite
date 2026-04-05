@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { ResourceChart } from "@/components/dashboard/ResourceChart";
-import { ContainerTable, Container } from "@/components/dashboard/ContainerTable";
+import { ContainerTable } from "@/components/dashboard/ContainerTable";
 import { Button } from "@/components/ui/button";
 import { CubeIcon, StackIcon, HardDrivesIcon, PulseIcon, TrashIcon } from "@phosphor-icons/react";
 import {
@@ -16,36 +14,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-interface SystemInfo {
-  total_images: number;
-  volume_storage: string;
-  system_health: string;
-}
+import { useStore } from "@/store/useStore";
 
 export function Dashboard() {
-  const [containers, setContainers] = useState<Container[]>([]);
-  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
-
-  const fetchData = async () => {
-    console.log("Fetching data");
-    try {
-      const portsData = await invoke<Container[]>("get_containers");
-      setContainers(portsData);
-
-      const sysData = await invoke<SystemInfo>("get_system_info");
-      setSystemInfo(sysData);
-    } catch (error) {
-      console.error("Failed to fetch data:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-    console.log("Data fetched");
-    const interval = setInterval(fetchData, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  const { containers, systemInfo, fetchContainers } = useStore();
 
   const handleSystemPrune = async () => {
     try {
@@ -132,7 +104,7 @@ export function Dashboard() {
           <h3 className="text-lg font-medium">Top Containers</h3>
           <p className="text-sm text-muted-foreground cursor-pointer hover:underline">View All</p>
         </div>
-        <ContainerTable containers={containers} onRefresh={fetchData} />
+        <ContainerTable containers={containers} onRefresh={fetchContainers} />
       </div>
     </>
   );

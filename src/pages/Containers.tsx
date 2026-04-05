@@ -1,27 +1,12 @@
-import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import { ContainerTable, Container } from "@/components/dashboard/ContainerTable";
+import { useState } from "react";
+import { ContainerTable } from "@/components/dashboard/ContainerTable";
 import { Input } from "@/components/ui/input";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { useStore } from "@/store/useStore";
 
 export function Containers() {
-  const [containers, setContainers] = useState<Container[]>([]);
+  const { containers, fetchContainers } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
-
-  const fetchContainers = async () => {
-    try {
-      const data = await invoke<Container[]>("get_containers");
-      setContainers(data);
-    } catch (error) {
-      console.error("Failed to fetch containers:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchContainers();
-    const interval = setInterval(fetchContainers, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   const filteredContainers = containers.filter(
     (c) =>

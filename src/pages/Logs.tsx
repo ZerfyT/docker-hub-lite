@@ -1,27 +1,15 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Container } from "@/components/dashboard/ContainerTable";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CubeIcon, ArrowsClockwiseIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { useStore } from "@/store/useStore";
 
 export function Logs() {
-  const [containers, setContainers] = useState<Container[]>([]);
+  const { containers } = useStore();
   const [selectedContainer, setSelectedContainer] = useState<string | null>(null);
   const [logs, setLogs] = useState<string>("");
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    const fetchContainers = async () => {
-      try {
-        const data = await invoke<Container[]>("get_containers");
-        setContainers(data || []);
-      } catch (error) {
-        console.error("Failed to fetch containers:", error);
-      }
-    };
-    fetchContainers();
-  }, []);
 
   const fetchLogs = async (containerId: string) => {
     setIsRefreshing(true);

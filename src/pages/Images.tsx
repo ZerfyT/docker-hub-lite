@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,32 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface ImageSummary {
-  Id: string;
-  RepoTags: string[];
-  Size: number;
-  Created: number;
-}
+import { useStore } from "@/store/useStore";
 
 export function Images() {
-  const [images, setImages] = useState<ImageSummary[]>([]);
+  const { images, fetchImages } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
-
-  const fetchImages = async () => {
-    try {
-      const data = await invoke<ImageSummary[]>("get_images");
-      setImages(data || []);
-    } catch (error) {
-      console.error("Failed to fetch images:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchImages();
-    const interval = setInterval(fetchImages, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const removeImage = async (id: string) => {
     try {

@@ -7,36 +7,14 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
-import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
-
 import { useLocation } from "react-router-dom";
+import { useStore } from "@/store/useStore";
 
 export function Header() {
-  const [dockerState, setDockerState] = useState<string>("Disconnected");
-  const [dockerStateError, setDockerStateError] = useState<string>("");
+  const { dockerState, dockerStateError } = useStore();
   const location = useLocation();
   const pathName = location.pathname.split("/").filter(Boolean).pop() || "Dashboard";
   const formattedPath = pathName.charAt(0).toUpperCase() + pathName.slice(1);
-
-  const fetchDockerState = async () => {
-    try {
-      const dockerState = await invoke<string>("get_docker_daemon_state");
-      console.log("Docker state fetched", dockerState);
-      setDockerState(dockerState);
-      setDockerStateError("");
-    } catch (error) {
-      setDockerState("Disconnected");
-      setDockerStateError(error as string);
-      console.error("Failed to fetch docker state:", error);
-    }
-  }
-
-  useEffect(() => {
-    fetchDockerState();
-    const interval = setInterval(fetchDockerState, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <header className="h-16 flex items-center justify-between px-6 border-b border-border bg-background">

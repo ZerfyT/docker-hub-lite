@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,32 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface NetworkSummary {
-  Id: string;
-  Name: string;
-  Driver: string;
-  Scope: string;
-}
+import { useStore } from "@/store/useStore";
 
 export function Networks() {
-  const [networks, setNetworks] = useState<NetworkSummary[]>([]);
+  const { networks, fetchNetworks } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
-
-  const fetchNetworks = async () => {
-    try {
-      const data = await invoke<NetworkSummary[]>("get_networks");
-      setNetworks(data || []);
-    } catch (error) {
-      console.error("Failed to fetch networks:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchNetworks();
-    const interval = setInterval(fetchNetworks, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const removeNetwork = async (id: string) => {
     try {
