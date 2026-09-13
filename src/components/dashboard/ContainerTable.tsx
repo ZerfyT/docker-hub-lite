@@ -13,13 +13,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -38,7 +31,9 @@ import {
   ArrowClockwiseIcon,
   Browsers,
   CopyIcon,
-  TrashIcon
+  TrashIcon,
+  SkullIcon,
+  HardDriveIcon
 } from "@phosphor-icons/react";
 import { invoke } from "@tauri-apps/api/core";
 import { Command } from "@tauri-apps/plugin-shell";
@@ -51,6 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DataTablePagination } from "./DataTablePagination";
 
 // Define the shape based on bollard's ContainerSummary
 export interface Container {
@@ -59,7 +55,9 @@ export interface Container {
   Image: string;
   State: string;
   Status: string;
+  Created: number;
   Ports?: { PrivatePort: number; PublicPort?: number; Type: string }[];
+  NetworkSettings?: { Networks: Record<string, { IPAddress: string }> };
 }
 
 interface ContainerTableProps {
@@ -169,10 +167,11 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
                 onCheckedChange={toggleAll}
               />
             </TableHead>
-            <TableHead className="w-[200px] font-semibold">Name</TableHead>
-            <TableHead className="font-semibold">Container ID</TableHead>
-            <TableHead className="font-semibold">Image</TableHead>
+            <TableHead className="w-[180px] font-semibold">Name</TableHead>
+            <TableHead className="font-semibold w-[120px]">IP Address</TableHead>
+            <TableHead className="font-semibold w-[120px]">Image</TableHead>
             <TableHead className="font-semibold">Port(s)</TableHead>
+            <TableHead className="font-semibold">Created</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
             <TableHead className="text-right font-semibold pr-4">Actions</TableHead>
           </TableRow>
@@ -191,25 +190,38 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
               const isPaused = c.State === "paused";
               const isSelected = selected?.includes(c.Id);
 
+              const networks = c.NetworkSettings?.Networks ? Object.values(c.NetworkSettings.Networks) : [];
+              const ip = networks.find(n => n.IPAddress)?.IPAddress || "-";
+
+              const createdDate = c.Created ? new Date(c.Created * 1000).toLocaleDateString() : "-";
+
               return (
                 <TableRow key={c.Id} className={`hover:bg-muted/30 transition-colors group cursor-pointer ${isSelected ? "bg-primary/5" : ""}`} onClick={() => navigate(`/containers/${c.Id}`)}>
                   <TableCell className="pl-4" onClick={(e) => toggleSelection(e, c.Id)}>
                     <Checkbox checked={isSelected} className="pointer-events-none" />
                   </TableCell>
                   <TableCell className="font-medium border-l border-transparent">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500' : isPaused ? 'bg-yellow-500' : 'bg-gray-500'}`}></div>
-                      {c.Names[0]?.replace("/", "") || "Unnamed"}
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500' : isPaused ? 'bg-yellow-500' : 'bg-gray-500'}`}></div>
+                        <span className="truncate max-w-[150px]">{c.Names[0]?.replace("/", "") || "Unnamed"}</span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground ml-4">{shortId}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {shortId}
+                    <span className="cursor-pointer hover:text-primary transition-colors" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(ip); toast.success("IP Copied!"); }} title="Copy IP">
+                      {ip}
+                    </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground truncate max-w-[150px]" title={c.Image}>
+                  <TableCell className="text-muted-foreground truncate max-w-[120px]" title={c.Image}>
                     {c.Image}
                   </TableCell>
                   <TableCell className="text-primary hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); openInBrowser(c); }}>
                     {c.Ports?.map(p => p.PublicPort ? `${p.PublicPort}:${p.PrivatePort}` : p.PrivatePort).join(", ") || "-"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">
+                    {createdDate}
                   </TableCell>
                   <TableCell>
                     <span className="text-xs text-muted-foreground">
@@ -256,13 +268,16 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
                           <DropdownMenuItem onClick={() => handleTerminal(c.Id)}>
                             <TerminalIcon className="mr-2 h-4 w-4" /> Open in terminal
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => runAction("commit_container", c.Id)}>
+                            <Files className="mr-2 h-4 w-4" /> Commit as Image
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => navigate(`/containers/${c.Id}?tab=files`)}>
                             <Files className="mr-2 h-4 w-4" /> View files
                           </DropdownMenuItem>
                           {isRunning && (
                             <DropdownMenuItem onClick={() => runAction("pause_container", c.Id)}>
-                              <PauseIcon className="mr-2 h-4 w-4" /> PauseIcon
+                              <PauseIcon className="mr-2 h-4 w-4" /> Pause
                             </DropdownMenuItem>
                           )}
                           {isPaused && (
@@ -277,6 +292,11 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
                             <Browsers className="mr-2 h-4 w-4" /> Open with browser
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          {isRunning && (
+                            <DropdownMenuItem className="text-amber-600 focus:text-amber-600" onClick={() => runAction("kill_container", c.Id)}>
+                              <SquareIcon className="mr-2 h-4 w-4" /> Kill container (Force)
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setContainerToDelete(c.Id)}>
                             <TrashIcon className="mr-2 h-4 w-4" /> Delete container
                           </DropdownMenuItem>
@@ -291,53 +311,13 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
         </TableBody>
       </Table>
       {containers.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Rows per page</span>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={(value) => {
-                setPageSize(Number(value));
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue placeholder={pageSize} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div>
-              Page {safeCurrentPage} of {totalPages}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-3 text-xs"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={safeCurrentPage === 1}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-3 text-xs"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={safeCurrentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        </div>
+        <DataTablePagination
+          currentPage={safeCurrentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          setCurrentPage={setCurrentPage}
+        />
       )}
       <AlertDialog open={!!containerToDelete} onOpenChange={(open) => !open && setContainerToDelete(null)}>
         <AlertDialogContent>

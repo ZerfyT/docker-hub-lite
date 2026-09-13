@@ -50,6 +50,10 @@ interface AppState {
   systemInfo: SystemInfo | null;
   fetchSystemInfo: () => Promise<void>;
 
+  // System DF
+  systemDf: any | null;
+  fetchSystemDf: () => Promise<void>;
+
   // Containers
   containers: Container[];
   fetchContainers: () => Promise<void>;
@@ -105,6 +109,17 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
 
+  systemDf: null,
+  fetchSystemDf: async () => {
+    try {
+      const rawDf = await invoke<string>("get_docker_df");
+      const df = JSON.parse(rawDf);
+      set({ systemDf: df });
+    } catch (error) {
+      console.error("Failed to fetch system df:", error);
+    }
+  },
+
   containers: [],
   fetchContainers: async () => {
     try {
@@ -146,10 +161,11 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   fetchAllData: async () => {
-    const { fetchDockerState, fetchSystemInfo, fetchContainers, fetchImages, fetchNetworks, fetchVolumes } = get();
+    const { fetchDockerState, fetchSystemInfo, fetchSystemDf, fetchContainers, fetchImages, fetchNetworks, fetchVolumes } = get();
     await Promise.allSettled([
       fetchDockerState(),
       fetchSystemInfo(),
+      fetchSystemDf(),
       fetchContainers(),
       fetchImages(),
       fetchNetworks(),

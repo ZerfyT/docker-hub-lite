@@ -38,7 +38,14 @@ async fn get_containers(state: State<'_, AppState>) -> Result<Vec<ContainerSumma
     });
 
     match state.docker.list_containers(options).await {
-        Ok(containers) => Ok(containers),
+        Ok(mut containers) => {
+            containers.sort_by(|a, b| {
+                let name_a = a.names.as_ref().and_then(|n| n.first()).unwrap_or(&String::new()).clone();
+                let name_b = b.names.as_ref().and_then(|n| n.first()).unwrap_or(&String::new()).clone();
+                name_a.cmp(&name_b)
+            });
+            Ok(containers)
+        }
         Err(e) => Err(e.to_string()),
     }
 }
@@ -206,7 +213,11 @@ async fn get_images(
         .list_images(None::<bollard::image::ListImagesOptions<String>>)
         .await
     {
-        Ok(images) => Ok(images),
+        Ok(mut images) => {
+            // Sort by created time descending (newest first)
+            images.sort_by(|a, b| b.created.cmp(&a.created));
+            Ok(images)
+        }
         Err(e) => Err(e.to_string()),
     }
 }
@@ -228,7 +239,11 @@ async fn get_volumes(state: State<'_, AppState>) -> Result<Vec<bollard::models::
         .list_volumes(None::<bollard::volume::ListVolumesOptions<String>>)
         .await
     {
-        Ok(res) => Ok(res.volumes.unwrap_or_default()),
+        Ok(res) => {
+            let mut volumes = res.volumes.unwrap_or_default();
+            volumes.sort_by(|a, b| a.name.cmp(&b.name));
+            Ok(volumes)
+        }
         Err(e) => Err(e.to_string()),
     }
 }
@@ -250,7 +265,11 @@ async fn get_networks(state: State<'_, AppState>) -> Result<Vec<bollard::models:
         .list_networks(None::<bollard::network::ListNetworksOptions<String>>)
         .await
     {
-        Ok(networks) => Ok(networks),
+        Ok(mut networks) => {
+            // Sort alphabetically by network name safely
+            networks.sort_by(|a, b| a.name.cmp(&b.name));
+            Ok(networks)
+        }
         Err(e) => Err(e.to_string()),
     }
 }
@@ -311,6 +330,65 @@ async fn get_docker_daemon_state(state: State<'_, AppState>) -> Result<String, S
     }
 }
 
+#[tauri::command]
+async fn kill_container(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    match state.docker.kill_container::<String>(&id, None).await {
+        Ok(_) => Ok(format!("Container {} killed", id)),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+async fn commit_container(id: String) -> Result<String, String> {
+    let output = std::process::Command::new("docker")
+        .args(["commit", &id])
+        .output()
+        .map_err(|e| e.to_string())?;
+    
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).to_string())
+    }
+}
+
+#[tauri::command]
+async fn quick_run_image(id: String) -> Result<String, String> {
+    let output = std::process::Command::new("docker")
+        .args(["run", "-d", &id])
+        .output()
+        .map_err(|e| e.to_string())?;
+    
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).to_string())
+    }
+}
+
+#[tauri::command]
+async fn backup_volume(name: String, path: String) -> Result<String, String> {
+    let path_obj = std::path::Path::new(&path);
+    let parent = path_obj.parent().ok_or("Invalid path")?.to_string_lossy();
+    let filename = path_obj.file_name().ok_or("Invalid filename")?.to_string_lossy();
+
+    let output = std::process::Command::new("docker")
+        .args([
+            "run", "--rm",
+            "-v", &format!("{}:/volume", name),
+            "-v", &format!("{}:/backup", parent),
+            "alpine", "tar", "-czf", &format!("/backup/{}", filename), "-C", "/volume", "."
+        ])
+        .output()
+        .map_err(|e| e.to_string())?;
+    
+    if output.status.success() {
+        Ok(format!("Volume backed up to {}", path))
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).to_string())
+    }
+}
+
 fn main() {
     // Connect to the local Docker socket
     let docker = Docker::connect_with_local_defaults().expect("Failed to connect to Docker");
@@ -320,6 +398,7 @@ fn main() {
     sys.refresh_cpu_all(); // First refresh to get a baseline
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .manage(AppState {
@@ -347,7 +426,20 @@ fn main() {
             get_container_logs,
             get_host_stats,
             get_docker_daemon_state,
+            get_docker_df,
+            kill_container,
+            commit_container,
+            quick_run_image,
+            backup_volume,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[tauri::command]
+async fn get_docker_df(state: tauri::State<'_, AppState>) -> Result<String, String> {
+    match state.docker.df().await {
+        Ok(df) => Ok(serde_json::to_string(&df).unwrap_or_else(|_| "{}".to_string())),
+        Err(e) => Err(e.to_string()),
+    }
 }

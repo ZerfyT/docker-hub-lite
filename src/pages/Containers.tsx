@@ -117,7 +117,19 @@ export function Containers() {
       <div className="flex items-center gap-16 mb-4 mt-2">
         <div className="flex flex-col">
           <span className="text-sm font-semibold flex items-center gap-1.5">
-            Container CPU usage <InfoIcon className="h-4 w-4 text-muted-foreground" />
+            Containers <InfoIcon className="h-4 w-4 text-muted-foreground" />
+          </span>
+          <span className="text-primary font-medium text-sm mt-1 flex gap-2 items-center">
+            {containers.length} Total
+            <span className="text-muted-foreground">/</span>
+            <span className="text-green-500">{containers.filter(c => c.State === "running").length} Running</span>
+            <span className="text-muted-foreground">/</span>
+            <span className="text-neutral-500">{containers.filter(c => c.State !== "running").length} Stopped</span>
+          </span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold flex items-center gap-1.5">
+            CPU usage <InfoIcon className="h-4 w-4 text-muted-foreground" />
           </span>
           <span className="text-primary font-medium text-sm mt-1 flex gap-1">
             {totalCPU.toFixed(2)}% <span className="text-muted-foreground">/ {(cpuCores * 100).toFixed(0)}% <span className="text-[13px]">({cpuCores} CPUs available)</span></span>
@@ -125,7 +137,7 @@ export function Containers() {
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-semibold flex items-center gap-1.5">
-            Container memory usage <InfoIcon className="h-4 w-4 text-muted-foreground" />
+            Memory usage <InfoIcon className="h-4 w-4 text-muted-foreground" />
           </span>
           <span className="text-primary font-medium text-sm mt-1 flex gap-1">
             {formatBytes(totalMem)} <span className="text-muted-foreground">/ {formatBytes(memLimit)}</span>
