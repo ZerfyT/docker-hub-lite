@@ -32,13 +32,13 @@ import {
   SquareIcon,
   TerminalIcon,
   DotsThreeVertical,
-  Info,
+  InfoIcon,
   Files,
-  Pause,
-  ArrowClockwise,
+  PauseIcon,
+  ArrowClockwiseIcon,
   Browsers,
-  Copy,
-  Trash
+  CopyIcon,
+  TrashIcon
 } from "@phosphor-icons/react";
 import { invoke } from "@tauri-apps/api/core";
 import { Command } from "@tauri-apps/plugin-shell";
@@ -248,10 +248,10 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
                           <DropdownMenuItem onClick={() => navigate(`/containers/${c.Id}`)}>
-                            <Info className="mr-2 h-4 w-4" /> View details
+                            <InfoIcon className="mr-2 h-4 w-4" /> View details
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => copyDockerRun(c.Id)}>
-                            <Copy className="mr-2 h-4 w-4" /> Copy docker run
+                            <CopyIcon className="mr-2 h-4 w-4" /> Copy docker run
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleTerminal(c.Id)}>
                             <TerminalIcon className="mr-2 h-4 w-4" /> Open in terminal
@@ -262,7 +262,7 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
                           </DropdownMenuItem>
                           {isRunning && (
                             <DropdownMenuItem onClick={() => runAction("pause_container", c.Id)}>
-                              <Pause className="mr-2 h-4 w-4" /> Pause
+                              <PauseIcon className="mr-2 h-4 w-4" /> PauseIcon
                             </DropdownMenuItem>
                           )}
                           {isPaused && (
@@ -271,14 +271,14 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={() => runAction("restart_container", c.Id)}>
-                            <ArrowClockwise className="mr-2 h-4 w-4" /> Restart
+                            <ArrowClockwiseIcon className="mr-2 h-4 w-4" /> Restart
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => openInBrowser(c)}>
                             <Browsers className="mr-2 h-4 w-4" /> Open with browser
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setContainerToDelete(c.Id)}>
-                            <Trash className="mr-2 h-4 w-4" /> Delete container
+                            <TrashIcon className="mr-2 h-4 w-4" /> Delete container
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowsClockwiseIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function StatsTab({ containerId, isRunning }: { containerId: string, isRunning: boolean }) {
   const [stats, setStats] = useState<any>(null);
@@ -86,55 +87,56 @@ export function StatsTab({ containerId, isRunning }: { containerId: string, isRu
   }
 
   return (
-    <div className="p-6 h-full overflow-y-auto space-y-4 border-t border-border/50 bg-muted/10">
-      <div className="flex items-center justify-between mb-2">
+    <div className="flex flex-col h-full w-full min-h-0 overflow-hidden relative rounded-b-md border-t border-border/50 bg-muted/10">
+      <div className="flex items-center justify-between p-4 pb-0">
         <h3 className="font-semibold text-lg">Live Container Stats</h3>
         <Button variant="outline" size="sm" onClick={fetchStats} disabled={loading}>
           <ArrowsClockwiseIcon className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
+      <ScrollArea className="flex-1 w-full h-full p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
+          <Card className="shadow-none">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">CPU Usage</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{cpuPerc.toFixed(2)}%</div>
+            </CardContent>
+          </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">CPU Usage</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{cpuPerc.toFixed(2)}%</div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Memory Usage</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{memUsage} <span className="text-sm text-muted-foreground font-normal">/ {memLimit}</span></div>
-            <div className="text-xs text-muted-foreground mt-1">{memPerc.toFixed(2)}% of limit</div>
-          </CardContent>
-        </Card>
+          <Card className="shadow-none">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Memory Usage</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{memUsage} <span className="text-sm text-muted-foreground font-normal">/ {memLimit}</span></div>
+              <div className="text-xs text-muted-foreground mt-1">{memPerc.toFixed(2)}% of limit</div>
+            </CardContent>
+          </Card>
 
-        <Card className="shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Network I/O</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatBytes(netRx)} <span className="text-sm text-muted-foreground font-normal">/ {formatBytes(netTx)}</span></div>
-            <div className="text-xs text-muted-foreground mt-1">RX / TX</div>
-          </CardContent>
-        </Card>
+          <Card className="shadow-none">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Network I/O</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatBytes(netRx)} <span className="text-sm text-muted-foreground font-normal">/ {formatBytes(netTx)}</span></div>
+              <div className="text-xs text-muted-foreground mt-1">RX / TX</div>
+            </CardContent>
+          </Card>
 
-        <Card className="shadow-none">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Block I/O</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatBytes(blockRead)} <span className="text-sm text-muted-foreground font-normal">/ {formatBytes(blockWrite)}</span></div>
-            <div className="text-xs text-muted-foreground mt-1">Read / Write</div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="shadow-none">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Block I/O</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatBytes(blockRead)} <span className="text-sm text-muted-foreground font-normal">/ {formatBytes(blockWrite)}</span></div>
+              <div className="text-xs text-muted-foreground mt-1">Read / Write</div>
+            </CardContent>
+          </Card>
+        </div>
+      </ScrollArea>
     </div>
   );
 }

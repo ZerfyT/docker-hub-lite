@@ -1,3 +1,4 @@
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -26,8 +27,9 @@ export function BindMountsTab({ mounts }: { mounts: Mount[] }) {
   }
 
   return (
-    <div className="border-t border-border/50 h-full overflow-auto">
-      <Table>
+    <div className="flex flex-col h-full w-full min-h-0 overflow-hidden relative rounded-b-md border-t border-border/50">
+      <ScrollArea className="flex-1 w-full h-full">
+        <Table>
         <TableHeader className="bg-muted/40">
           <TableRow>
             <TableHead className="font-semibold">Type</TableHead>
@@ -49,6 +51,7 @@ export function BindMountsTab({ mounts }: { mounts: Mount[] }) {
           ))}
         </TableBody>
       </Table>
+      </ScrollArea>
     </div>
   );
 }

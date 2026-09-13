@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ContainerTable } from "@/components/dashboard/ContainerTable";
 import { Input } from "@/components/ui/input";
-import { MagnifyingGlassIcon, Info, PlayIcon, SquareIcon, Pause, Trash } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon, InfoIcon, PlayIcon, SquareIcon, PauseIcon, TrashIcon } from "@phosphor-icons/react";
 import { useStore } from "@/store/useStore";
 import { Switch } from "@/components/ui/switch";
 import { invoke } from "@tauri-apps/api/core";
@@ -29,7 +29,7 @@ export function Containers() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     const fetchAggregateStats = async () => {
       const runningContainers = containers.filter(c => c.State === "running");
       if (runningContainers.length === 0) {
@@ -37,22 +37,22 @@ export function Containers() {
         setTotalMem(0);
         return;
       }
-      
+
       let sumCpu = 0;
       let sumMem = 0;
       let limitMem = 0;
       let limitCpu = 0;
 
       try {
-        const statsPromises = runningContainers.map(c => 
+        const statsPromises = runningContainers.map(c =>
           invoke<string>("get_container_stats_once", { id: c.Id }).catch(() => null)
         );
         const results = await Promise.all(statsPromises);
-        
+
         for (const raw of results) {
           if (!raw) continue;
           const stats = JSON.parse(raw);
-          
+
           const usage = stats.memory_stats?.usage || 0;
           sumMem += usage;
           if (limitMem === 0) limitMem = stats.memory_stats?.limit || 0;
@@ -60,18 +60,18 @@ export function Containers() {
           const cpuDelta = stats.cpu_stats?.cpu_usage?.total_usage - (stats.precpu_stats?.cpu_usage?.total_usage || 0);
           const systemDelta = stats.cpu_stats?.system_cpu_usage - (stats.precpu_stats?.system_cpu_usage || 0);
           const onlineCpus = stats.cpu_stats?.online_cpus || stats.cpu_stats?.cpu_usage?.percpu_usage?.length || 1;
-          
+
           if (systemDelta > 0 && cpuDelta > 0) {
             sumCpu += (cpuDelta / systemDelta) * onlineCpus * 100;
           }
           if (limitCpu === 0) limitCpu = onlineCpus;
         }
-        
+
         setTotalCPU(sumCpu);
         setTotalMem(sumMem);
         setMemLimit(limitMem);
         setCpuCores(limitCpu);
-        
+
       } catch (e) {
         console.error("Error fetching stats for containers top bar:", e);
       }
@@ -99,7 +99,7 @@ export function Containers() {
   const filteredContainers = containers.filter(
     (c) => {
       const matchesSearch = c.Names?.[0]?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            c.Image?.toLowerCase().includes(searchQuery.toLowerCase());
+        c.Image?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = showOnlyRunning ? c.State === "running" : true;
       return matchesSearch && matchesStatus;
     }
@@ -117,7 +117,7 @@ export function Containers() {
       <div className="flex items-center gap-16 mb-4 mt-2">
         <div className="flex flex-col">
           <span className="text-sm font-semibold flex items-center gap-1.5">
-            Container CPU usage <Info className="h-4 w-4 text-muted-foreground" />
+            Container CPU usage <InfoIcon className="h-4 w-4 text-muted-foreground" />
           </span>
           <span className="text-primary font-medium text-sm mt-1 flex gap-1">
             {totalCPU.toFixed(2)}% <span className="text-muted-foreground">/ {(cpuCores * 100).toFixed(0)}% <span className="text-[13px]">({cpuCores} CPUs available)</span></span>
@@ -125,10 +125,10 @@ export function Containers() {
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-semibold flex items-center gap-1.5">
-            Container memory usage <Info className="h-4 w-4 text-muted-foreground" />
+            Container memory usage <InfoIcon className="h-4 w-4 text-muted-foreground" />
           </span>
           <span className="text-primary font-medium text-sm mt-1 flex gap-1">
-             {formatBytes(totalMem)} <span className="text-muted-foreground">/ {formatBytes(memLimit)}</span>
+            {formatBytes(totalMem)} <span className="text-muted-foreground">/ {formatBytes(memLimit)}</span>
           </span>
         </div>
       </div>
@@ -147,10 +147,10 @@ export function Containers() {
           </div>
           <div className="flex items-center space-x-4 shrink-0">
             <div className="flex items-center space-x-2">
-              <Switch 
-                id="running-filter" 
+              <Switch
+                id="running-filter"
                 checked={showOnlyRunning}
-                onCheckedChange={setShowOnlyRunning} 
+                onCheckedChange={setShowOnlyRunning}
               />
               <Label htmlFor="running-filter" className="font-semibold text-sm cursor-pointer whitespace-nowrap">
                 Only show running containers
@@ -158,20 +158,20 @@ export function Containers() {
             </div>
           </div>
         </div>
-        
+
         {selected.length > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground mr-2 font-medium">{selected.length} selected</span>
             <Button size="icon" variant="destructive" className="h-9 w-9" onClick={() => handleBulkAction("remove_container")} title="Delete">
-              <Trash className="h-4 w-4" />
+              <TrashIcon className="h-4 w-4" />
             </Button>
             <div className="flex items-center border border-border rounded-md overflow-hidden bg-background">
               <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-primary hover:text-primary/80 hover:bg-muted" onClick={() => handleBulkAction("start_container")} title="Start">
                 <PlayIcon className="h-4 w-4 fill-current" />
               </Button>
               <div className="w-[1px] h-9 bg-border" />
-              <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-muted-foreground hover:bg-muted" onClick={() => handleBulkAction("pause_container")} title="Pause">
-                <Pause className="h-4 w-4 fill-current" />
+              <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-muted-foreground hover:bg-muted" onClick={() => handleBulkAction("pause_container")} title="PauseIcon">
+                <PauseIcon className="h-4 w-4 fill-current" />
               </Button>
               <div className="w-[1px] h-9 bg-border" />
               <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-muted-foreground hover:bg-muted" onClick={() => handleBulkAction("stop_container")} title="Stop">
@@ -183,11 +183,11 @@ export function Containers() {
       </div>
 
       <div className="rounded-md border bg-background overflow-hidden relative">
-        <ContainerTable 
-          containers={filteredContainers} 
-          onRefresh={fetchContainers} 
-          selected={selected} 
-          onSelectedChange={setSelected} 
+        <ContainerTable
+          containers={filteredContainers}
+          onRefresh={fetchContainers}
+          selected={selected}
+          onSelectedChange={setSelected}
         />
       </div>
     </div>
