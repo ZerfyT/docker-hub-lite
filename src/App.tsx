@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
 import { Dashboard } from "@/pages/Dashboard";
 import { Containers } from "@/pages/Containers";
 import { ContainerDetails } from "@/pages/ContainerDetails";
@@ -43,6 +44,7 @@ function App() {
           <Route path="/templates" element={<Templates />} />
         </Routes>
       </AppLayout>
+      <Toaster />
     </BrowserRouter>
   );
 }

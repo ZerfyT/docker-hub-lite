@@ -143,19 +143,22 @@ async fn inspect_container(state: State<'_, AppState>, id: String) -> Result<Str
 
 // Command to fetch one-shot stats
 #[tauri::command]
-async fn get_container_stats_once(state: State<'_, AppState>, id: String) -> Result<String, String> {
+async fn get_container_stats_once(
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<String, String> {
     use futures_util::StreamExt;
     let options = Some(bollard::container::StatsOptions {
         stream: false,
         one_shot: true,
     });
-    
+
     let mut stats_stream = state.docker.stats(&id, options);
-    
+
     if let Some(result) = stats_stream.next().await {
         match result {
             Ok(stats) => Ok(serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())),
-            Err(e) => Err(e.to_string())
+            Err(e) => Err(e.to_string()),
         }
     } else {
         Err("Failed to fetch stats".to_string())
@@ -164,7 +167,11 @@ async fn get_container_stats_once(state: State<'_, AppState>, id: String) -> Res
 
 // Command to execute command inside a container
 #[tauri::command]
-async fn exec_command(state: State<'_, AppState>, id: String, cmd: Vec<String>) -> Result<String, String> {
+async fn exec_command(
+    state: State<'_, AppState>,
+    id: String,
+    cmd: Vec<String>,
+) -> Result<String, String> {
     use futures_util::StreamExt;
     let config = bollard::exec::CreateExecOptions {
         cmd: Some(cmd),
@@ -172,20 +179,18 @@ async fn exec_command(state: State<'_, AppState>, id: String, cmd: Vec<String>) 
         attach_stderr: Some(true),
         ..Default::default()
     };
-    
+
     match state.docker.create_exec(&id, config).await {
-        Ok(exec) => {
-            match state.docker.start_exec(&exec.id, None).await {
-                Ok(bollard::exec::StartExecResults::Attached { mut output, .. }) => {
-                    let mut result = String::new();
-                    while let Some(Ok(msg)) = output.next().await {
-                        result.push_str(&msg.to_string());
-                    }
-                    Ok(result)
-                },
-                Ok(bollard::exec::StartExecResults::Detached) => Ok("Detached".to_string()),
-                Err(e) => Err(e.to_string())
+        Ok(exec) => match state.docker.start_exec(&exec.id, None).await {
+            Ok(bollard::exec::StartExecResults::Attached { mut output, .. }) => {
+                let mut result = String::new();
+                while let Some(Ok(msg)) = output.next().await {
+                    result.push_str(&msg.to_string());
+                }
+                Ok(result)
             }
+            Ok(bollard::exec::StartExecResults::Detached) => Ok("Detached".to_string()),
+            Err(e) => Err(e.to_string()),
         },
         Err(e) => Err(e.to_string()),
     }
@@ -315,6 +320,7 @@ fn main() {
     sys.refresh_cpu_all(); // First refresh to get a baseline
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .manage(AppState {
             docker,

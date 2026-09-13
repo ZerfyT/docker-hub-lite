@@ -1,4 +1,24 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -51,23 +71,38 @@ interface ContainerTableProps {
 
 export function ContainerTable({ containers, onRefresh, selected, onSelectedChange }: ContainerTableProps) {
   const navigate = useNavigate();
+  const [containerToDelete, setContainerToDelete] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const totalPages = Math.ceil(containers.length / pageSize) || 1;
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedContainers = containers.slice(
+    (safeCurrentPage - 1) * pageSize,
+    safeCurrentPage * pageSize
+  );
 
   const runAction = async (action: string, id: string) => {
     try {
       await invoke(action, { id });
+      toast.success(`Success: ${action}`);
       onRefresh();
     } catch (error) {
-      console.error(`Failed to ${action}:`, error);
-      alert(`Error: ${error}`);
+      const msg = `Error: Failed to ${action}, ${error}`;
+      console.error(msg);
+      toast.error(msg);
     }
   };
 
   const handleTerminal = async (id: string) => {
     try {
-      const command = Command.create('sh', ['-c', `x-terminal-emulator -e docker exec -it ${id} sh || gnome-terminal -- docker exec -it ${id} sh`]);
+      const command = Command.create('run-sh', ['-c', `x-terminal-emulator -e docker exec -it ${id} sh || gnome-terminal -- docker exec -it ${id} sh`]);
       await command.spawn();
     } catch (error) {
-      console.error("Failed to open terminal:", error);
+      const msg = `Error: Failed to open terminal, ${error}`;
+      console.error(msg);
+      toast.error(msg);
     }
   };
 
@@ -78,9 +113,11 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
       const image = inspect.Config.Image;
       const cmd = `docker run -d ${image}`;
       await navigator.clipboard.writeText(cmd);
-      alert("Basic docker run command copied to clipboard!");
+      toast.success("Docker run command copied to clipboard!");
     } catch (error) {
-      console.error("Failed to copy:", error);
+      const msg = `Error: Failed to copy docker run command, ${error}`;
+      console.error(msg);
+      toast.error(msg);
     }
   };
 
@@ -88,16 +125,16 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
     // Find first public port
     const port = container.Ports?.find(p => p.PublicPort);
     if (port && port.PublicPort) {
-      // Use tauri plugin opener or just raw command
       const url = `http://localhost:${port.PublicPort}`;
       try {
-        const cmd = Command.create('sh', ['-c', `xdg-open ${url} || open ${url}`]);
-        await cmd.spawn();
-      } catch (e) {
-        console.error("Failed to open browser", e);
+        await openUrl(url);
+      } catch (error) {
+        const msg = `Error: Failed to open browser, ${error}`;
+        console.error(msg);
+        toast.error(msg);
       }
     } else {
-      alert("No public ports mapped for this container.");
+      toast.error("Error: No public ports mapped for this container.");
     }
   };
 
@@ -148,7 +185,7 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
               </TableCell>
             </TableRow>
           ) : (
-            containers.map((c) => {
+            paginatedContainers.map((c) => {
               const shortId = c.Id.substring(0, 12);
               const isRunning = c.State === "running";
               const isPaused = c.State === "paused";
@@ -240,7 +277,7 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
                             <Browsers className="mr-2 h-4 w-4" /> Open with browser
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => runAction("remove_container", c.Id)}>
+                          <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setContainerToDelete(c.Id)}>
                             <Trash className="mr-2 h-4 w-4" /> Delete container
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -253,6 +290,79 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
           )}
         </TableBody>
       </Table>
+      {containers.length > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Rows per page</span>
+            <Select
+              value={pageSize.toString()}
+              onValueChange={(value) => {
+                setPageSize(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue placeholder={pageSize} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div>
+              Page {safeCurrentPage} of {totalPages}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 text-xs"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={safeCurrentPage === 1}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 text-xs"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={safeCurrentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      <AlertDialog open={!!containerToDelete} onOpenChange={(open) => !open && setContainerToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the container. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (containerToDelete) {
+                  runAction("remove_container", containerToDelete);
+                  setContainerToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

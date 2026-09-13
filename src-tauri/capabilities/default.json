@@ -8,6 +8,27 @@
   "permissions": [
     "core:default",
     "opener:default",
-    "shell:default"
+    "shell:default",
+    "shell:allow-spawn",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "run-sh",
+          "cmd": "sh",
+          "args": true
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "run-sh",
+          "cmd": "sh",
+          "args": true
+        }
+      ]
+    }
   ]
 }
