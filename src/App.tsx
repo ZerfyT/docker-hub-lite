@@ -14,18 +14,17 @@ import { useStore } from "@/store/useStore";
 import { useEffect } from "react";
 
 function App() {
-  const { theme, mode } = useStore();
+  const { mode } = useStore();
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.dataset.theme = theme;
-    
+
     if (mode === "dark") {
       root.classList.add("dark");
     } else {
       root.classList.remove("dark");
     }
-  }, [theme, mode]);
+  }, [mode]);
 
   return (
     <BrowserRouter>

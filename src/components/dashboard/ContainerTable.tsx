@@ -45,8 +45,8 @@ export interface Container {
 interface ContainerTableProps {
   containers: Container[];
   onRefresh: () => void;
-  selected: string[];
-  onSelectedChange: (selected: string[]) => void;
+  selected?: string[];
+  onSelectedChange?: (selected: string[]) => void;
 }
 
 export function ContainerTable({ containers, onRefresh, selected, onSelectedChange }: ContainerTableProps) {
@@ -103,18 +103,18 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
 
   const toggleAll = (checked: boolean) => {
     if (checked) {
-      onSelectedChange(containers.map(c => c.Id));
+      onSelectedChange?.(containers.map(c => c.Id));
     } else {
-      onSelectedChange([]);
+      onSelectedChange?.([]);
     }
   };
 
   const toggleSelection = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (selected.includes(id)) {
-      onSelectedChange(selected.filter(s => s !== id));
+    if (selected?.includes(id)) {
+      onSelectedChange?.(selected.filter(s => s !== id));
     } else {
-      onSelectedChange([...selected, id]);
+      onSelectedChange?.([...selected, id]);
     }
   };
 
