@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { MagnifyingGlassIcon, TrashIcon, InfoIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
 import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 import { ImageTable } from "@/components/dashboard/ImageTable";
+import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
 
 export function Images() {
   const { images, fetchImages, systemDf } = useStore();
@@ -29,14 +28,14 @@ export function Images() {
 
   const handleBulkAction = async (action: string) => {
     if (selected.length === 0) return;
-    
+
     const isRemove = action === "remove_image";
     const confirmMessage = isRemove ? "Are you sure you want to delete the selected images?" : "Are you sure?";
-    
+
     if (confirm(confirmMessage)) {
       let successCount = 0;
       let failCount = 0;
-      
+
       for (const id of selected) {
         try {
           await invoke(action, { id });
@@ -46,14 +45,14 @@ export function Images() {
           failCount++;
         }
       }
-      
+
       if (successCount > 0) {
         toast.success(`Successfully executed action on ${successCount} image(s)`);
       }
       if (failCount > 0) {
         toast.error(`Failed to execute action on ${failCount} image(s)`);
       }
-      
+
       setSelected([]);
       fetchImages();
     }
@@ -92,31 +91,16 @@ export function Images() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="relative w-full max-w-sm">
-            <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search images by repository or tag..."
-              className="pl-9 bg-background border-border"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          {selected.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground mr-2 font-medium">{selected.length} selected</span>
-              <Button size="icon" variant="destructive" className="h-9 w-9" onClick={() => handleBulkAction("remove_image")} title="Delete">
-                <TrashIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredImages.length} of {images.length} images
-        </div>
-      </div>
+      <TableActionsBar
+        itemName="images"
+        searchPlaceholder="Search images by repository or tag..."
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedCount={selected.length}
+        onDelete={() => handleBulkAction("remove_image")}
+        filteredCount={filteredImages.length}
+        totalCount={images.length}
+      />
 
       <div className="rounded-md border bg-background overflow-hidden relative">
         <ImageTable

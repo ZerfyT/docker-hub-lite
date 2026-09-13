@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { MagnifyingGlassIcon, TrashIcon, InfoIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
 import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 import { NetworkTable } from "@/components/dashboard/NetworkTable";
+import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
 
 export function Networks() {
   const { networks, fetchNetworks } = useStore();
@@ -73,31 +72,15 @@ export function Networks() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="relative w-full max-w-sm">
-            <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search networks by name..."
-              className="pl-9 bg-background border-border"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          {selected.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground mr-2 font-medium">{selected.length} selected</span>
-              <Button size="icon" variant="destructive" className="h-9 w-9" onClick={() => handleBulkAction("remove_network")} title="Delete">
-                <TrashIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredNetworks.length} of {networks.length} networks
-        </div>
-      </div>
+      <TableActionsBar
+        itemName="networks"
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedCount={selected.length}
+        onDelete={() => handleBulkAction("remove_network")}
+        filteredCount={filteredNetworks.length}
+        totalCount={networks.length}
+      />
 
       <div className="rounded-md border bg-background overflow-hidden relative">
         <NetworkTable

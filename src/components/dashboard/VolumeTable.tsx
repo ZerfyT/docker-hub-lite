@@ -19,9 +19,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { TrashIcon, DotsThreeVertical, CopyIcon, DownloadIcon } from "@phosphor-icons/react";
+import { TrashIcon, DotsThreeVerticalIcon, CopyIcon, DownloadIcon } from "@phosphor-icons/react";
 import { invoke } from "@tauri-apps/api/core";
-import { useStore } from "@/store/useStore";
+import { useStore, VolumeSummary } from "@/store/useStore";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTablePagination } from "./DataTablePagination";
 import {
@@ -31,15 +31,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export interface Volume {
-  Name: string;
-  Driver: string;
-  Mountpoint: string;
-  Labels: Record<string, string> | null;
-}
-
 interface VolumeTableProps {
-  volumes: Volume[];
+  volumes: VolumeSummary[];
   onRefresh: () => void;
   selected?: string[];
   onSelectedChange?: (selected: string[]) => void;
@@ -53,7 +46,7 @@ export function VolumeTable({ volumes, onRefresh, selected = [], onSelectedChang
 
   const totalPages = Math.ceil(volumes.length / pageSize) || 1;
   const safeCurrentPage = Math.min(currentPage, totalPages) || 1;
-  
+
   const paginatedVolumes = volumes.slice(
     (safeCurrentPage - 1) * pageSize,
     safeCurrentPage * pageSize
@@ -121,15 +114,15 @@ export function VolumeTable({ volumes, onRefresh, selected = [], onSelectedChang
       <Table>
         <TableHeader className="bg-muted/40">
           <TableRow>
-            <TableHead className="w-[40px] text-center pl-4">
+            <TableHead className="w-10 text-center pl-4">
               <Checkbox
                 checked={allSelected ? true : someSelected ? "indeterminate" : false}
                 onCheckedChange={toggleAll}
               />
             </TableHead>
             <TableHead className="font-semibold">Name</TableHead>
-            <TableHead className="font-semibold w-[120px]">Size</TableHead>
-            <TableHead className="font-semibold w-[100px]">Status</TableHead>
+            <TableHead className="font-semibold w-30">Size</TableHead>
+            <TableHead className="font-semibold w-25">Status</TableHead>
             <TableHead className="font-semibold">Driver</TableHead>
             <TableHead className="font-semibold">Mountpoint</TableHead>
             <TableHead className="text-right font-semibold pr-4">Actions</TableHead>
@@ -180,7 +173,7 @@ export function VolumeTable({ volumes, onRefresh, selected = [], onSelectedChang
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                            <DotsThreeVertical className="h-5 w-5" />
+                            <DotsThreeVerticalIcon className="h-5 w-5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
@@ -206,7 +199,7 @@ export function VolumeTable({ volumes, onRefresh, selected = [], onSelectedChang
           )}
         </TableBody>
       </Table>
-      
+
       {volumes.length > 0 && (
         <DataTablePagination
           currentPage={safeCurrentPage}

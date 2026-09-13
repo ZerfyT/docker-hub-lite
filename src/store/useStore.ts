@@ -7,6 +7,9 @@ export interface Container {
   Image: string;
   State: string;
   Status: string;
+  Created: number;
+  Ports?: { PrivatePort: number; PublicPort?: number; Type: string }[];
+  NetworkSettings?: { Networks: Record<string, { IPAddress: string }> };
 }
 
 export interface SystemInfo {
@@ -20,6 +23,7 @@ export interface ImageSummary {
   RepoTags: string[];
   Size: number;
   Created: number;
+  Containers: number;
 }
 
 export interface NetworkSummary {
@@ -34,6 +38,7 @@ export interface VolumeSummary {
   Driver: string;
   Mountpoint: string;
   CreatedAt?: string;
+  Labels: Record<string, string> | null;
 }
 
 interface AppState {

@@ -32,8 +32,6 @@ import {
   Browsers,
   CopyIcon,
   TrashIcon,
-  SkullIcon,
-  HardDriveIcon
 } from "@phosphor-icons/react";
 import { invoke } from "@tauri-apps/api/core";
 import { Command } from "@tauri-apps/plugin-shell";

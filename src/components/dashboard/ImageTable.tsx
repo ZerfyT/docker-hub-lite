@@ -29,17 +29,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-export interface Image {
-  Id: string;
-  RepoTags: string[];
-  Created: number;
-  Size: number;
-  Containers: number;
-}
+import { ImageSummary } from "@/store/useStore";
 
 interface ImageTableProps {
-  images: Image[];
+  images: ImageSummary[];
   onRefresh: () => void;
   selected?: string[];
   onSelectedChange?: (selected: string[]) => void;

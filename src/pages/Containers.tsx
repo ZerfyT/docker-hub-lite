@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ContainerTable } from "@/components/dashboard/ContainerTable";
-import { Input } from "@/components/ui/input";
-import { MagnifyingGlassIcon, InfoIcon, PlayIcon, SquareIcon, PauseIcon, TrashIcon } from "@phosphor-icons/react";
+import { InfoIcon, PlayIcon, SquareIcon, PauseIcon } from "@phosphor-icons/react";
+import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
 import { useStore } from "@/store/useStore";
 import { Switch } from "@/components/ui/switch";
 import { invoke } from "@tauri-apps/api/core";
@@ -145,54 +145,43 @@ export function Containers() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between space-x-12">
-        <div className="flex items-center space-x-12 flex-1">
-          <div className="relative w-full max-w-sm">
-            <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search"
-              className="pl-9 bg-background border-border focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-primary h-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+      <TableActionsBar
+        itemName="containers"
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedCount={selected.length}
+        onDelete={() => handleBulkAction("remove_container")}
+        filteredCount={filteredContainers.length}
+        totalCount={containers.length}
+        extraFilters={
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="running-filter"
+              checked={showOnlyRunning}
+              onCheckedChange={setShowOnlyRunning}
             />
+            <Label htmlFor="running-filter" className="font-semibold text-sm cursor-pointer whitespace-nowrap">
+              Only show running containers
+            </Label>
           </div>
-          <div className="flex items-center space-x-4 shrink-0">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="running-filter"
-                checked={showOnlyRunning}
-                onCheckedChange={setShowOnlyRunning}
-              />
-              <Label htmlFor="running-filter" className="font-semibold text-sm cursor-pointer whitespace-nowrap">
-                Only show running containers
-              </Label>
-            </div>
-          </div>
-        </div>
-
-        {selected.length > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground mr-2 font-medium">{selected.length} selected</span>
-            <Button size="icon" variant="destructive" className="h-9 w-9" onClick={() => handleBulkAction("remove_container")} title="Delete">
-              <TrashIcon className="h-4 w-4" />
+        }
+        extraBulkActions={
+          <div className="flex items-center border border-border rounded-md overflow-hidden bg-background ml-2">
+            <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-primary hover:text-primary/80 hover:bg-muted" onClick={() => handleBulkAction("start_container")} title="Start">
+              <PlayIcon className="h-4 w-4 fill-current" />
             </Button>
-            <div className="flex items-center border border-border rounded-md overflow-hidden bg-background">
-              <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-primary hover:text-primary/80 hover:bg-muted" onClick={() => handleBulkAction("start_container")} title="Start">
-                <PlayIcon className="h-4 w-4 fill-current" />
-              </Button>
-              <div className="w-[1px] h-9 bg-border" />
-              <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-muted-foreground hover:bg-muted" onClick={() => handleBulkAction("pause_container")} title="PauseIcon">
-                <PauseIcon className="h-4 w-4 fill-current" />
-              </Button>
-              <div className="w-[1px] h-9 bg-border" />
-              <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-muted-foreground hover:bg-muted" onClick={() => handleBulkAction("stop_container")} title="Stop">
-                <SquareIcon className="h-4 w-4 fill-current" />
-              </Button>
-            </div>
+            <div className="w-[px] h-9 bg-border" />
+            <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-muted-foreground hover:bg-muted" onClick={() => handleBulkAction("pause_container")} title="Pause">
+              <PauseIcon className="h-4 w-4 fill-current" />
+            </Button>
+            <div className="w-[px] h-9 bg-border" />
+            <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-muted-foreground hover:bg-muted" onClick={() => handleBulkAction("stop_container")} title="Stop">
+              <SquareIcon className="h-4 w-4 fill-current" />
+            </Button>
           </div>
-        )}
-      </div>
+        }
+      />
+
 
       <div className="rounded-md border bg-background overflow-hidden relative">
         <ContainerTable
