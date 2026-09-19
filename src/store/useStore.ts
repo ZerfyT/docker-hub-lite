@@ -16,6 +16,13 @@ export interface SystemInfo {
   total_images: number;
   volume_storage: string;
   system_health: string;
+  operating_system: string;
+  kernel_version: string;
+  server_version: string;
+  ncpu: number;
+  mem_total: number;
+  driver: string;
+  docker_root_dir: string;
 }
 
 export interface ImageSummary {
@@ -81,6 +88,15 @@ interface AppState {
   // Color Theme
   mode: "light" | "dark";
   setMode: (mode: "light" | "dark") => void;
+
+  // Prune
+  systemPrune: () => Promise<string>;
+
+  // Daemon JSON
+  daemonJson: string | null;
+  daemonJsonError: string | null;
+  fetchDaemonJson: () => Promise<void>;
+  editDaemonJsonExternal: () => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -176,5 +192,36 @@ export const useStore = create<AppState>((set, get) => ({
       fetchNetworks(),
       fetchVolumes()
     ]);
+  },
+
+  systemPrune: async () => {
+    try {
+      const result = await invoke<string>("system_prune");
+      get().fetchAllData(); // refresh data after prune
+      return result;
+    } catch (error) {
+      console.error("Failed to prune system:", error);
+      throw error;
+    }
+  },
+
+  daemonJson: null,
+  daemonJsonError: null,
+  fetchDaemonJson: async () => {
+    try {
+      const json = await invoke<string>("get_daemon_json");
+      set({ daemonJson: json, daemonJsonError: null });
+    } catch (error) {
+      set({ daemonJson: null, daemonJsonError: error as string });
+    }
+  },
+
+  editDaemonJsonExternal: async () => {
+    try {
+      await invoke("edit_daemon_json_external");
+    } catch (error) {
+      console.error("Failed to open external editor:", error);
+      throw error;
+    }
   }
 }));

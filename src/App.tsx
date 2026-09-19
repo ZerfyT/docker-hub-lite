@@ -10,7 +10,6 @@ import { Networks } from "@/pages/Networks";
 import { Logs } from "@/pages/Logs";
 import { SystemInfo } from "@/pages/SystemInfo";
 import { AppSettings } from "@/pages/AppSettings";
-import { Templates } from "@/pages/Templates";
 import { useStore } from "@/store/useStore";
 import { useEffect } from "react";
 
@@ -41,7 +40,6 @@ function App() {
           <Route path="/logs" element={<Logs />} />
           <Route path="/system-info" element={<SystemInfo />} />
           <Route path="/settings" element={<AppSettings />} />
-          <Route path="/templates" element={<Templates />} />
         </Routes>
       </AppLayout>
       <Toaster />

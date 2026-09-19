@@ -21,6 +21,13 @@ struct SystemInfo {
     total_images: usize,
     volume_storage: String,
     system_health: String,
+    operating_system: String,
+    kernel_version: String,
+    server_version: String,
+    ncpu: i64,
+    mem_total: i64,
+    driver: String,
+    docker_root_dir: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -40,8 +47,18 @@ async fn get_containers(state: State<'_, AppState>) -> Result<Vec<ContainerSumma
     match state.docker.list_containers(options).await {
         Ok(mut containers) => {
             containers.sort_by(|a, b| {
-                let name_a = a.names.as_ref().and_then(|n| n.first()).unwrap_or(&String::new()).clone();
-                let name_b = b.names.as_ref().and_then(|n| n.first()).unwrap_or(&String::new()).clone();
+                let name_a = a
+                    .names
+                    .as_ref()
+                    .and_then(|n| n.first())
+                    .unwrap_or(&String::new())
+                    .clone();
+                let name_b = b
+                    .names
+                    .as_ref()
+                    .and_then(|n| n.first())
+                    .unwrap_or(&String::new())
+                    .clone();
                 name_a.cmp(&name_b)
             });
             Ok(containers)
@@ -68,7 +85,7 @@ async fn get_system_info(state: State<'_, AppState>) -> Result<SystemInfo, Strin
         .unwrap_or_default();
     let total_images = images.len();
 
-    // Volumes (just hardcode space used for now, as Docker API df is complex via bollard)
+    // Volumes (just hardcode space used for now)
     let volumes = state
         .docker
         .list_volumes(None::<bollard::volume::ListVolumesOptions<String>>)
@@ -79,10 +96,24 @@ async fn get_system_info(state: State<'_, AppState>) -> Result<SystemInfo, Strin
         Err(_) => "Error fetching volumes".to_string(),
     };
 
+    // Detailed Info
+    let info = state.docker.info().await.map_err(|e| e.to_string())?;
+
     Ok(SystemInfo {
         total_images,
         volume_storage,
         system_health,
+        operating_system: info
+            .operating_system
+            .unwrap_or_else(|| "Unknown".to_string()),
+        kernel_version: info.kernel_version.unwrap_or_else(|| "Unknown".to_string()),
+        server_version: info.server_version.unwrap_or_else(|| "Unknown".to_string()),
+        ncpu: info.ncpu.unwrap_or(0),
+        mem_total: info.mem_total.unwrap_or(0),
+        driver: info.driver.unwrap_or_else(|| "Unknown".to_string()),
+        docker_root_dir: info
+            .docker_root_dir
+            .unwrap_or_else(|| "Unknown".to_string()),
     })
 }
 
@@ -344,7 +375,7 @@ async fn commit_container(id: String) -> Result<String, String> {
         .args(["commit", &id])
         .output()
         .map_err(|e| e.to_string())?;
-    
+
     if output.status.success() {
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     } else {
@@ -358,7 +389,7 @@ async fn quick_run_image(id: String) -> Result<String, String> {
         .args(["run", "-d", &id])
         .output()
         .map_err(|e| e.to_string())?;
-    
+
     if output.status.success() {
         Ok(String::from_utf8_lossy(&output.stdout).to_string())
     } else {
@@ -370,22 +401,138 @@ async fn quick_run_image(id: String) -> Result<String, String> {
 async fn backup_volume(name: String, path: String) -> Result<String, String> {
     let path_obj = std::path::Path::new(&path);
     let parent = path_obj.parent().ok_or("Invalid path")?.to_string_lossy();
-    let filename = path_obj.file_name().ok_or("Invalid filename")?.to_string_lossy();
+    let filename = path_obj
+        .file_name()
+        .ok_or("Invalid filename")?
+        .to_string_lossy();
 
     let output = std::process::Command::new("docker")
         .args([
-            "run", "--rm",
-            "-v", &format!("{}:/volume", name),
-            "-v", &format!("{}:/backup", parent),
-            "alpine", "tar", "-czf", &format!("/backup/{}", filename), "-C", "/volume", "."
+            "run",
+            "--rm",
+            "-v",
+            &format!("{}:/volume", name),
+            "-v",
+            &format!("{}:/backup", parent),
+            "alpine",
+            "tar",
+            "-czf",
+            &format!("/backup/{}", filename),
+            "-C",
+            "/volume",
+            ".",
         ])
         .output()
         .map_err(|e| e.to_string())?;
-    
+
     if output.status.success() {
         Ok(format!("Volume backed up to {}", path))
     } else {
         Err(String::from_utf8_lossy(&output.stderr).to_string())
+    }
+}
+
+async fn raw_system_prune() -> Result<String, String> {
+    let output = std::process::Command::new("docker")
+        .args(["system", "prune", "-af", "--volumes"])
+        .output();
+
+    match output {
+        Ok(o) => {
+            if o.status.success() {
+                Ok(String::from_utf8_lossy(&o.stdout).into_owned())
+            } else {
+                Err(String::from_utf8_lossy(&o.stderr).into_owned())
+            }
+        }
+        Err(e) => Err(format!("Failed to execute docker cli fallback: {}", e)),
+    }
+}
+
+#[tauri::command]
+async fn system_prune(state: State<'_, AppState>) -> Result<String, String> {
+    let mut success_msgs = Vec::new();
+
+    // Containers
+    if let Err(_) = state
+        .docker
+        .prune_containers(None::<bollard::container::PruneContainersOptions<String>>)
+        .await
+    {
+        return raw_system_prune().await;
+    } else {
+        success_msgs.push("Containers pruned");
+    }
+
+    // Images
+    if let Err(_) = state
+        .docker
+        .prune_images(None::<bollard::image::PruneImagesOptions<String>>)
+        .await
+    {
+        return raw_system_prune().await;
+    } else {
+        success_msgs.push("Images pruned");
+    }
+
+    // Networks
+    if let Err(_) = state
+        .docker
+        .prune_networks(None::<bollard::network::PruneNetworksOptions<String>>)
+        .await
+    {
+        return raw_system_prune().await;
+    } else {
+        success_msgs.push("Networks pruned");
+    }
+
+    // Volumes
+    if let Err(_) = state
+        .docker
+        .prune_volumes(None::<bollard::volume::PruneVolumesOptions<String>>)
+        .await
+    {
+        return raw_system_prune().await;
+    } else {
+        success_msgs.push("Volumes pruned");
+    }
+
+    Ok(success_msgs.join(", "))
+}
+
+#[tauri::command]
+async fn get_daemon_json() -> Result<String, String> {
+    let path = "/etc/docker/daemon.json"; // Basic linux path
+    match std::fs::read_to_string(path) {
+        Ok(content) => Ok(content),
+        Err(e) => Err(format!("Could not read {}: {}", path, e)),
+    }
+}
+
+#[tauri::command]
+async fn edit_daemon_json_external() -> Result<String, String> {
+    let script = r#"
+        if command -v gnome-terminal >/dev/null 2>&1; then
+            gnome-terminal -- sudo nano /etc/docker/daemon.json
+        elif command -v konsole >/dev/null 2>&1; then
+            konsole -e sudo nano /etc/docker/daemon.json
+        elif command -v x-terminal-emulator >/dev/null 2>&1; then
+            x-terminal-emulator -e "sudo nano /etc/docker/daemon.json"
+        elif command -v xterm >/dev/null 2>&1; then
+            xterm -e "sudo nano /etc/docker/daemon.json"
+        else
+            exit 1
+        fi
+    "#;
+    
+    let output = std::process::Command::new("sh")
+        .arg("-c")
+        .arg(script)
+        .spawn();
+
+    match output {
+        Ok(_) => Ok("Terminal opened".to_string()),
+        Err(e) => Err(e.to_string()),
     }
 }
 
@@ -398,6 +545,7 @@ fn main() {
     sys.refresh_cpu_all(); // First refresh to get a baseline
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_autostart::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
@@ -431,6 +579,9 @@ fn main() {
             commit_container,
             quick_run_image,
             backup_volume,
+            system_prune,
+            get_daemon_json,
+            edit_daemon_json_external,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

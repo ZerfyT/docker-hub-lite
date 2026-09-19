@@ -34,7 +34,6 @@ const primaryNav = [
 const secondaryNav = [
   { name: "System Info", path: "/system-info", icon: CpuIcon },
   { name: "App Settings", path: "/settings", icon: GearIcon },
-  { name: "Templates", path: "/templates", icon: UsersIcon },
 ];
 
 export function Sidebar({ className }: SidebarProps) {
