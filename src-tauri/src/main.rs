@@ -11,6 +11,7 @@ use tauri::State;
 struct AppState {
     docker: Docker,
     sys_info: std::sync::Mutex<sysinfo::System>,
+    event_stream_started: std::sync::Mutex<bool>,
 }
 
 use serde::{Deserialize, Serialize};
@@ -535,6 +536,39 @@ async fn edit_daemon_json_external() -> Result<String, String> {
         Err(e) => Err(e.to_string()),
     }
 }
+#[tauri::command]
+async fn get_docker_config() -> Result<String, String> {
+    let mut path = dirs::home_dir().ok_or("Could not find home directory")?;
+    path.push(".docker");
+    path.push("config.json");
+    
+    match std::fs::read_to_string(&path) {
+        Ok(content) => Ok(content),
+        Err(e) => Err(format!("Could not read {}: {}", path.display(), e)),
+    }
+}
+
+#[tauri::command]
+async fn start_event_stream(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<(), String> {
+    let mut started = state.event_stream_started.lock().unwrap();
+    if *started {
+        return Ok(());
+    }
+    *started = true;
+    
+    let docker = state.docker.clone();
+    tauri::async_runtime::spawn(async move {
+        use futures_util::StreamExt;
+        use tauri::Emitter;
+        let mut stream = docker.events(None::<bollard::system::EventsOptions<String>>);
+        while let Some(event_res) = stream.next().await {
+            if let Ok(event) = event_res {
+                let _ = app.emit("docker-event", event);
+            }
+        }
+    });
+    Ok(())
+}
 
 fn main() {
     // Connect to the local Docker socket
@@ -552,6 +586,7 @@ fn main() {
         .manage(AppState {
             docker,
             sys_info: std::sync::Mutex::new(sys),
+            event_stream_started: std::sync::Mutex::new(false),
         })
         .invoke_handler(tauri::generate_handler![
             get_containers,
@@ -582,6 +617,8 @@ fn main() {
             system_prune,
             get_daemon_json,
             edit_daemon_json_external,
+            start_event_stream,
+            get_docker_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

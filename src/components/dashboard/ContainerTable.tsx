@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -195,114 +195,114 @@ export function ContainerTable({ containers, onRefresh, selected, onSelectedChan
 
               return (
                 <TableRow key={c.Id} className={`hover:bg-muted/30 transition-colors group cursor-pointer ${isSelected ? "bg-primary/5" : ""}`} onClick={() => navigate(`/containers/${c.Id}`)}>
-                  <TableCell className="pl-4" onClick={(e) => toggleSelection(e, c.Id)}>
-                    <Checkbox checked={isSelected} className="pointer-events-none" />
-                  </TableCell>
-                  <TableCell className="font-medium border-l border-transparent">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500' : isPaused ? 'bg-yellow-500' : 'bg-gray-500'}`}></div>
-                        <span className="truncate max-w-[150px]">{c.Names[0]?.replace("/", "") || "Unnamed"}</span>
+                    <TableCell className="pl-4" onClick={(e) => toggleSelection(e, c.Id)}>
+                      <Checkbox checked={isSelected} className="pointer-events-none" />
+                    </TableCell>
+                    <TableCell className="font-medium border-l border-transparent">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500' : isPaused ? 'bg-yellow-500' : 'bg-gray-500'}`}></div>
+                          <span className="truncate max-w-[150px]">{c.Names[0]?.replace("/", "") || "Unnamed"}</span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground ml-4">{shortId}</span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground ml-4">{shortId}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    <span className="cursor-pointer hover:text-primary transition-colors" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(ip); toast.success("IP Copied!"); }} title="Copy IP">
-                      {ip}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground truncate max-w-[120px]" title={c.Image}>
-                    {c.Image}
-                  </TableCell>
-                  <TableCell className="text-primary hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); openInBrowser(c); }}>
-                    {c.Ports?.map(p => p.PublicPort ? `${p.PublicPort}:${p.PrivatePort}` : p.PrivatePort).join(", ") || "-"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground whitespace-nowrap">
-                    {createdDate}
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-xs text-muted-foreground">
-                      {c.Status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right pr-4">
-                    <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
-                      {isRunning ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => runAction("stop_container", c.Id)}
-                          title="Stop"
-                        >
-                          <SquareIcon className="h-4 w-4 fill-current" />
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-primary hover:text-primary/80"
-                          onClick={() => runAction("start_container", c.Id)}
-                          title="Start"
-                        >
-                          <PlayIcon className="h-4 w-4 fill-current" />
-                        </Button>
-                      )}
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                            <DotsThreeVertical className="h-5 w-5" />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <span className="cursor-pointer hover:text-primary transition-colors" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(ip); toast.success("IP Copied!"); }} title="Copy IP">
+                        {ip}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground truncate max-w-[120px]" title={c.Image}>
+                      {c.Image}
+                    </TableCell>
+                    <TableCell className="text-primary hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); openInBrowser(c); }}>
+                      {c.Ports?.map(p => p.PublicPort ? `${p.PublicPort}:${p.PrivatePort}` : p.PrivatePort).join(", ") || "-"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">
+                      {createdDate}
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs text-muted-foreground">
+                        {c.Status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right pr-4">
+                      <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
+                        {isRunning ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => runAction("stop_container", c.Id)}
+                            title="Stop"
+                          >
+                            <SquareIcon className="h-4 w-4 fill-current" />
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuItem onClick={() => navigate(`/containers/${c.Id}`)}>
-                            <InfoIcon className="mr-2 h-4 w-4" /> View details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => copyDockerRun(c.Id)}>
-                            <CopyIcon className="mr-2 h-4 w-4" /> Copy docker run
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleTerminal(c.Id)}>
-                            <TerminalIcon className="mr-2 h-4 w-4" /> Open in terminal
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => runAction("commit_container", c.Id)}>
-                            <Files className="mr-2 h-4 w-4" /> Commit as Image
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => navigate(`/containers/${c.Id}?tab=files`)}>
-                            <Files className="mr-2 h-4 w-4" /> View files
-                          </DropdownMenuItem>
-                          {isRunning && (
-                            <DropdownMenuItem onClick={() => runAction("pause_container", c.Id)}>
-                              <PauseIcon className="mr-2 h-4 w-4" /> Pause
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary hover:text-primary/80"
+                            onClick={() => runAction("start_container", c.Id)}
+                            title="Start"
+                          >
+                            <PlayIcon className="h-4 w-4 fill-current" />
+                          </Button>
+                        )}
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                              <DotsThreeVertical className="h-5 w-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem onClick={() => navigate(`/containers/${c.Id}`)}>
+                              <InfoIcon className="mr-2 h-4 w-4" /> View details
                             </DropdownMenuItem>
-                          )}
-                          {isPaused && (
-                            <DropdownMenuItem onClick={() => runAction("unpause_container", c.Id)}>
-                              <PlayIcon className="mr-2 h-4 w-4" /> Unpause
+                            <DropdownMenuItem onClick={() => copyDockerRun(c.Id)}>
+                              <CopyIcon className="mr-2 h-4 w-4" /> Copy docker run
                             </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => runAction("restart_container", c.Id)}>
-                            <ArrowClockwiseIcon className="mr-2 h-4 w-4" /> Restart
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openInBrowser(c)}>
-                            <Browsers className="mr-2 h-4 w-4" /> Open with browser
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {isRunning && (
-                            <DropdownMenuItem className="text-amber-600 focus:text-amber-600" onClick={() => runAction("kill_container", c.Id)}>
-                              <SquareIcon className="mr-2 h-4 w-4" /> Kill container (Force)
+                            <DropdownMenuItem onClick={() => handleTerminal(c.Id)}>
+                              <TerminalIcon className="mr-2 h-4 w-4" /> Open in terminal
                             </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setContainerToDelete(c.Id)}>
-                            <TrashIcon className="mr-2 h-4 w-4" /> Delete container
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                            <DropdownMenuItem onClick={() => runAction("commit_container", c.Id)}>
+                              <Files className="mr-2 h-4 w-4" /> Commit as Image
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => navigate(`/containers/${c.Id}?tab=files`)}>
+                              <Files className="mr-2 h-4 w-4" /> View files
+                            </DropdownMenuItem>
+                            {isRunning && (
+                              <DropdownMenuItem onClick={() => runAction("pause_container", c.Id)}>
+                                <PauseIcon className="mr-2 h-4 w-4" /> Pause
+                              </DropdownMenuItem>
+                            )}
+                            {isPaused && (
+                              <DropdownMenuItem onClick={() => runAction("unpause_container", c.Id)}>
+                                <PlayIcon className="mr-2 h-4 w-4" /> Unpause
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem onClick={() => runAction("restart_container", c.Id)}>
+                              <ArrowClockwiseIcon className="mr-2 h-4 w-4" /> Restart
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openInBrowser(c)}>
+                              <Browsers className="mr-2 h-4 w-4" /> Open with browser
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {isRunning && (
+                              <DropdownMenuItem className="text-amber-600 focus:text-amber-600" onClick={() => runAction("kill_container", c.Id)}>
+                                <SquareIcon className="mr-2 h-4 w-4" /> Kill container (Force)
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setContainerToDelete(c.Id)}>
+                              <TrashIcon className="mr-2 h-4 w-4" /> Delete container
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
               )
             })
           )}

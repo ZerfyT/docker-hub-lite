@@ -8,7 +8,7 @@ interface TableActionsBarProps {
   searchPlaceholder?: string;
   searchQuery: string;
   setSearchQuery: (val: string) => void;
-  selectedCount: number;
+  selectedCount?: number;
   onDelete?: () => void;
   extraBulkActions?: React.ReactNode;
   extraFilters?: React.ReactNode;
@@ -45,7 +45,7 @@ export function TableActionsBar({
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0">
-        {selectedCount > 0 && (
+        {selectedCount && selectedCount > 0 && (
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground mr-2 font-medium">{selectedCount} selected</span>
             {onDelete && (
@@ -56,7 +56,7 @@ export function TableActionsBar({
             {extraBulkActions}
           </div>
         )}
-        
+
         <div className="text-sm text-muted-foreground">
           Showing {filteredCount} of {totalCount} {itemName}
         </div>

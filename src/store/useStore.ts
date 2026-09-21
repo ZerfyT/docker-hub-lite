@@ -8,8 +8,9 @@ export interface Container {
   State: string;
   Status: string;
   Created: number;
-  Ports?: { PrivatePort: number; PublicPort?: number; Type: string }[];
+  Ports?: { PrivatePort: number; PublicPort?: number; Type: string; IP?: string }[];
   NetworkSettings?: { Networks: Record<string, { IPAddress: string }> };
+  Labels?: Record<string, string> | null;
 }
 
 export interface SystemInfo {
@@ -97,6 +98,10 @@ interface AppState {
   daemonJsonError: string | null;
   fetchDaemonJson: () => Promise<void>;
   editDaemonJsonExternal: () => Promise<void>;
+
+  // Docker Config
+  dockerConfig: any | null;
+  fetchDockerConfig: () => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -222,6 +227,17 @@ export const useStore = create<AppState>((set, get) => ({
     } catch (error) {
       console.error("Failed to open external editor:", error);
       throw error;
+    }
+  },
+
+  dockerConfig: null,
+  fetchDockerConfig: async () => {
+    try {
+      const configStr = await invoke<string>("get_docker_config");
+      set({ dockerConfig: JSON.parse(configStr) });
+    } catch (error) {
+      console.error("Failed to fetch docker config:", error);
+      set({ dockerConfig: null });
     }
   }
 }));

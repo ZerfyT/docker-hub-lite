@@ -11,6 +11,10 @@ import {
   GithubLogoIcon,
   StarIcon,
   BoatIcon,
+  PlugsIcon,
+  ActivityIcon,
+  GraphIcon,
+  ShieldCheckIcon,
 } from "@phosphor-icons/react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -28,6 +32,11 @@ const primaryNav = [
   { name: "Images", path: "/images", icon: StackIcon },
   { name: "Volumes", path: "/volumes", icon: HardDrivesIcon },
   { name: "Networks", path: "/networks", icon: NetworkIcon },
+  { name: "Ports", path: "/ports", icon: PlugsIcon },
+  { name: "Stacks", path: "/stacks", icon: StackIcon },
+  { name: "Network Map", path: "/topology", icon: GraphIcon },
+  { name: "Registries", path: "/registries", icon: ShieldCheckIcon },
+  { name: "Event Log", path: "/events", icon: ActivityIcon },
   { name: "Logs", path: "/logs", icon: FileTextIcon },
 ];
 

@@ -10,6 +10,11 @@ import { Networks } from "@/pages/Networks";
 import { Logs } from "@/pages/Logs";
 import { SystemInfo } from "@/pages/SystemInfo";
 import { AppSettings } from "@/pages/AppSettings";
+import { Ports } from "@/pages/Ports";
+import { Stacks } from "@/pages/Stacks";
+import { Events } from "@/pages/Events";
+import { NetworkMap } from "@/pages/NetworkMap";
+import { Registries } from "@/pages/Registries";
 import { useStore } from "@/store/useStore";
 import { useEffect } from "react";
 
@@ -38,6 +43,11 @@ function App() {
           <Route path="/volumes" element={<Volumes />} />
           <Route path="/networks" element={<Networks />} />
           <Route path="/logs" element={<Logs />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/ports" element={<Ports />} />
+          <Route path="/stacks" element={<Stacks />} />
+          <Route path="/topology" element={<NetworkMap />} />
+          <Route path="/registries" element={<Registries />} />
           <Route path="/system-info" element={<SystemInfo />} />
           <Route path="/settings" element={<AppSettings />} />
         </Routes>
