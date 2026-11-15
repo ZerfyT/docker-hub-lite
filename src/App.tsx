@@ -19,7 +19,7 @@ import { useStore } from "@/store/useStore";
 import { useEffect } from "react";
 
 function App() {
-  const { mode } = useStore();
+  const { mode, theme } = useStore();
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -29,7 +29,8 @@ function App() {
     } else {
       root.classList.remove("dark");
     }
-  }, [mode]);
+    root.setAttribute("data-theme", theme || "zinc");
+  }, [mode, theme]);
 
   return (
     <BrowserRouter>

@@ -170,11 +170,11 @@ export function Containers() {
             <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-primary hover:text-primary/80 hover:bg-muted" onClick={() => handleBulkAction("start_container")} title="Start">
               <PlayIcon className="h-4 w-4 fill-current" />
             </Button>
-            <div className="w-[px] h-9 bg-border" />
+            <div className="w-px h-9 bg-border" />
             <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-muted-foreground hover:bg-muted" onClick={() => handleBulkAction("pause_container")} title="Pause">
               <PauseIcon className="h-4 w-4 fill-current" />
             </Button>
-            <div className="w-[px] h-9 bg-border" />
+            <div className="w-px h-9 bg-border" />
             <Button size="icon" variant="ghost" className="h-9 w-9 rounded-none text-muted-foreground hover:bg-muted" onClick={() => handleBulkAction("stop_container")} title="Stop">
               <SquareIcon className="h-4 w-4 fill-current" />
             </Button>

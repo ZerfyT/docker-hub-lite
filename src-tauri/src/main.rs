@@ -11,7 +11,7 @@ use tauri::State;
 struct AppState {
     docker: Docker,
     sys_info: std::sync::Mutex<sysinfo::System>,
-    event_stream_started: std::sync::Mutex<bool>,
+    event_stream_started: std::sync::Arc<std::sync::Mutex<bool>>,
 }
 
 use serde::{Deserialize, Serialize};
@@ -247,7 +247,7 @@ async fn get_images(
     {
         Ok(mut images) => {
             // Sort by created time descending (newest first)
-            images.sort_by(|a, b| b.created.cmp(&a.created));
+            images.sort_by_key(|b| std::cmp::Reverse(b.created));
             Ok(images)
         }
         Err(e) => Err(e.to_string()),
@@ -372,9 +372,10 @@ async fn kill_container(state: State<'_, AppState>, id: String) -> Result<String
 
 #[tauri::command]
 async fn commit_container(id: String) -> Result<String, String> {
-    let output = std::process::Command::new("docker")
+    let output = tokio::process::Command::new("docker")
         .args(["commit", &id])
         .output()
+        .await
         .map_err(|e| e.to_string())?;
 
     if output.status.success() {
@@ -386,9 +387,10 @@ async fn commit_container(id: String) -> Result<String, String> {
 
 #[tauri::command]
 async fn quick_run_image(id: String) -> Result<String, String> {
-    let output = std::process::Command::new("docker")
+    let output = tokio::process::Command::new("docker")
         .args(["run", "-d", &id])
         .output()
+        .await
         .map_err(|e| e.to_string())?;
 
     if output.status.success() {
@@ -407,7 +409,7 @@ async fn backup_volume(name: String, path: String) -> Result<String, String> {
         .ok_or("Invalid filename")?
         .to_string_lossy();
 
-    let output = std::process::Command::new("docker")
+    let output = tokio::process::Command::new("docker")
         .args([
             "run",
             "--rm",
@@ -424,6 +426,7 @@ async fn backup_volume(name: String, path: String) -> Result<String, String> {
             ".",
         ])
         .output()
+        .await
         .map_err(|e| e.to_string())?;
 
     if output.status.success() {
@@ -434,9 +437,10 @@ async fn backup_volume(name: String, path: String) -> Result<String, String> {
 }
 
 async fn raw_system_prune() -> Result<String, String> {
-    let output = std::process::Command::new("docker")
+    let output = tokio::process::Command::new("docker")
         .args(["system", "prune", "-af", "--volumes"])
-        .output();
+        .output()
+        .await;
 
     match output {
         Ok(o) => {
@@ -455,10 +459,11 @@ async fn system_prune(state: State<'_, AppState>) -> Result<String, String> {
     let mut success_msgs = Vec::new();
 
     // Containers
-    if let Err(_) = state
+    if state
         .docker
         .prune_containers(None::<bollard::container::PruneContainersOptions<String>>)
         .await
+        .is_err()
     {
         return raw_system_prune().await;
     } else {
@@ -466,10 +471,11 @@ async fn system_prune(state: State<'_, AppState>) -> Result<String, String> {
     }
 
     // Images
-    if let Err(_) = state
+    if state
         .docker
         .prune_images(None::<bollard::image::PruneImagesOptions<String>>)
         .await
+        .is_err()
     {
         return raw_system_prune().await;
     } else {
@@ -477,10 +483,11 @@ async fn system_prune(state: State<'_, AppState>) -> Result<String, String> {
     }
 
     // Networks
-    if let Err(_) = state
+    if state
         .docker
         .prune_networks(None::<bollard::network::PruneNetworksOptions<String>>)
         .await
+        .is_err()
     {
         return raw_system_prune().await;
     } else {
@@ -488,10 +495,11 @@ async fn system_prune(state: State<'_, AppState>) -> Result<String, String> {
     }
 
     // Volumes
-    if let Err(_) = state
+    if state
         .docker
         .prune_volumes(None::<bollard::volume::PruneVolumesOptions<String>>)
         .await
+        .is_err()
     {
         return raw_system_prune().await;
     } else {
@@ -550,13 +558,14 @@ async fn get_docker_config() -> Result<String, String> {
 
 #[tauri::command]
 async fn start_event_stream(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<(), String> {
-    let mut started = state.event_stream_started.lock().unwrap();
+    let mut started = state.event_stream_started.lock().map_err(|e| e.to_string())?;
     if *started {
         return Ok(());
     }
     *started = true;
     
     let docker = state.docker.clone();
+    let started_clone = std::sync::Arc::clone(&state.event_stream_started);
     tauri::async_runtime::spawn(async move {
         use futures_util::StreamExt;
         use tauri::Emitter;
@@ -566,13 +575,21 @@ async fn start_event_stream(app: tauri::AppHandle, state: State<'_, AppState>) -
                 let _ = app.emit("docker-event", event);
             }
         }
+        if let Ok(mut flag) = started_clone.lock() {
+            *flag = false;
+        }
     });
     Ok(())
 }
 
 fn main() {
-    // Connect to the local Docker socket
-    let docker = Docker::connect_with_local_defaults().expect("Failed to connect to Docker");
+    // Connect to the local Docker socket with fallback
+    let docker = Docker::connect_with_local_defaults().unwrap_or_else(|e| {
+        eprintln!("Warning: Failed to connect to Docker with local defaults: {}. Trying socket...", e);
+        Docker::connect_with_socket_defaults().unwrap_or_else(|_| {
+            Docker::connect_with_http_defaults().expect("Failed to initialize Docker client")
+        })
+    });
 
     // Initialize sysinfo
     let mut sys = System::new_all();
@@ -586,7 +603,7 @@ fn main() {
         .manage(AppState {
             docker,
             sys_info: std::sync::Mutex::new(sys),
-            event_stream_started: std::sync::Mutex::new(false),
+            event_stream_started: std::sync::Arc::new(std::sync::Mutex::new(false)),
         })
         .invoke_handler(tauri::generate_handler![
             get_containers,

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 
 export function SystemInfo() {
-  const { systemInfo, dockerState, dockerStateError, containers, images, volumes, networks } = useStore();
+  const { systemInfo, dockerState, dockerStateError, containers, images, volumes } = useStore();
 
   return (
     <div className="max-w-5xl space-y-6">

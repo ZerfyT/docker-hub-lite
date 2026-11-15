@@ -1,17 +1,16 @@
 import { useStore } from "@/store/useStore";
-import { useMemo, useCallback } from "react";
-import { ReactFlow, MiniMap, Controls, Background, useNodesState, useEdgesState, MarkerType } from "@xyflow/react";
+import { useEffect } from "react";
+import { ReactFlow, MiniMap, Controls, Background, useNodesState, useEdgesState, MarkerType, Node, Edge } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { NetworkIcon, GraphIcon } from "@phosphor-icons/react";
 
 export function NetworkMap() {
   const { containers, networks } = useStore();
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
-  useMemo(() => {
-    const newNodes: any[] = [];
-    const newEdges: any[] = [];
+  useEffect(() => {
+    const newNodes: Node[] = [];
+    const newEdges: Edge[] = [];
 
     // Very simple grid layout
     const netY = 100;
@@ -88,7 +87,7 @@ export function NetworkMap() {
         <p className="text-muted-foreground">Visual map of your containers and their network connections.</p>
       </div>
 
-      <div className="rounded-xl border bg-card text-card-foreground shadow-sm flex-1 min-h-[600px] overflow-hidden" style={{ width: '70vw', height: '70vh' }}>
+      <div className="rounded-xl border bg-card text-card-foreground shadow-sm flex-1 min-h-[600px] overflow-hidden" style={{ width: '100%', height: '70vh' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}

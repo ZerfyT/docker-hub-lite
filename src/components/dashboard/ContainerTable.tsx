@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -65,7 +65,7 @@ interface ContainerTableProps {
   onSelectedChange?: (selected: string[]) => void;
 }
 
-export function ContainerTable({ containers, onRefresh, selected, onSelectedChange }: ContainerTableProps) {
+export function ContainerTable({ containers, onRefresh, selected = [], onSelectedChange }: ContainerTableProps) {
   const navigate = useNavigate();
   const [containerToDelete, setContainerToDelete] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);

@@ -15,17 +15,20 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useStore } from "@/store/useStore";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export function Dashboard() {
-  const { containers, systemInfo, fetchContainers } = useStore();
+  const navigate = useNavigate();
+  const { containers, systemInfo, fetchContainers, systemPrune } = useStore();
 
   const handleSystemPrune = async () => {
     try {
-      // Temporary placeholder: invoke("system_prune");
-      console.log("System Prune Triggered");
-      alert("System pruned successfully!");
+      toast.loading("Pruning Docker system...", { id: "prune-toast" });
+      const result = await systemPrune();
+      toast.success(result || "System pruned successfully!", { id: "prune-toast" });
     } catch (error) {
-      console.error("Failed to prune system", error);
+      toast.error(`Failed to prune system: ${error}`, { id: "prune-toast" });
     }
   };
 
@@ -102,7 +105,12 @@ export function Dashboard() {
       <div className="space-y-4 pb-12">
         <div className="flex items-center justify-between gap-4">
           <h3 className="text-lg font-medium">Top Containers</h3>
-          <p className="text-sm text-muted-foreground cursor-pointer hover:underline">View All</p>
+          <p 
+            className="text-sm text-primary cursor-pointer hover:underline font-medium"
+            onClick={() => navigate("/containers")}
+          >
+            View All
+          </p>
         </div>
         <ContainerTable containers={containers} onRefresh={fetchContainers} />
       </div>

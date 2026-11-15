@@ -85,10 +85,13 @@ interface AppState {
 
   // Fetch all background Data
   fetchAllData: () => Promise<void>;
+  fetchFastData: () => Promise<void>;
 
   // Color Theme
   mode: "light" | "dark";
   setMode: (mode: "light" | "dark") => void;
+  theme: string;
+  setTheme: (theme: string) => void;
 
   // Prune
   systemPrune: () => Promise<string>;
@@ -111,6 +114,12 @@ export const useStore = create<AppState>((set, get) => ({
   setMode: (mode) => {
     localStorage.setItem("docker-lite-mode", mode);
     set({ mode });
+  },
+  theme: localStorage.getItem("docker-lite-theme") || "zinc",
+  setTheme: (theme) => {
+    localStorage.setItem("docker-lite-theme", theme);
+    document.documentElement.setAttribute("data-theme", theme);
+    set({ theme });
   },
 
   dockerState: "Disconnected",
@@ -192,6 +201,17 @@ export const useStore = create<AppState>((set, get) => ({
       fetchDockerState(),
       fetchSystemInfo(),
       fetchSystemDf(),
+      fetchContainers(),
+      fetchImages(),
+      fetchNetworks(),
+      fetchVolumes()
+    ]);
+  },
+
+  fetchFastData: async () => {
+    const { fetchDockerState, fetchContainers, fetchImages, fetchNetworks, fetchVolumes } = get();
+    await Promise.allSettled([
+      fetchDockerState(),
       fetchContainers(),
       fetchImages(),
       fetchNetworks(),

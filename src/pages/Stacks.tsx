@@ -2,14 +2,31 @@ import { useStore } from "@/store/useStore";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
-import { useState, useMemo } from "react";
-import { StackIcon, CubeIcon } from "@phosphor-icons/react";
+import { Fragment, useState, useMemo } from "react";
+import { StackIcon, CubeIcon, PlayIcon, SquareIcon, ArrowClockwiseIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { invoke } from "@tauri-apps/api/core";
+import { toast } from "sonner";
 
 export function Stacks() {
-  const { containers } = useStore();
+  const navigate = useNavigate();
+  const { containers, fetchContainers } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedStack, setExpandedStack] = useState<string | null>(null);
+
+  const handleStackAction = async (e: React.MouseEvent, stackContainers: any[], action: string, stackName: string) => {
+    e.stopPropagation();
+    try {
+      toast.loading(`${action.replace("_container", "")}ing stack ${stackName}...`, { id: `stack-${stackName}` });
+      const promises = stackContainers.map(c => invoke(action, { id: c.Id }));
+      await Promise.allSettled(promises);
+      await fetchContainers();
+      toast.success(`Action applied to stack ${stackName}`, { id: `stack-${stackName}` });
+    } catch (err) {
+      toast.error(`Failed to update stack: ${err}`, { id: `stack-${stackName}` });
+    }
+  };
 
   const stacks = useMemo(() => {
     const map = new Map<string, any[]>();
@@ -62,7 +79,7 @@ export function Stacks() {
               <TableHead>Stack Name</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Containers</TableHead>
-              <TableHead className="w-[100px]"></TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -75,8 +92,8 @@ export function Stacks() {
               </TableRow>
             ) : (
               filteredStacks.map((s) => (
-                <>
-                  <TableRow key={s.name} className="group">
+                <Fragment key={s.name}>
+                  <TableRow className="group">
                     <TableCell className="font-medium text-base">
                       <div className="flex items-center gap-2">
                         <StackIcon className="text-muted-foreground" />
@@ -95,14 +112,44 @@ export function Stacks() {
                         <span>{s.totalCount}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setExpandedStack(expandedStack === s.name ? null : s.name)}
-                      >
-                        {expandedStack === s.name ? "Hide" : "View"}
-                      </Button>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8 text-primary hover:text-primary/80" 
+                          onClick={(e) => handleStackAction(e, s.containers, "start_container", s.name)}
+                          title="Start entire stack"
+                        >
+                          <PlayIcon className="h-4 w-4 fill-current" />
+                        </Button>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive" 
+                          onClick={(e) => handleStackAction(e, s.containers, "stop_container", s.name)}
+                          title="Stop entire stack"
+                        >
+                          <SquareIcon className="h-4 w-4 fill-current" />
+                        </Button>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8 text-muted-foreground" 
+                          onClick={(e) => handleStackAction(e, s.containers, "restart_container", s.name)}
+                          title="Restart entire stack"
+                        >
+                          <ArrowClockwiseIcon className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="ml-2"
+                          onClick={() => setExpandedStack(expandedStack === s.name ? null : s.name)}
+                        >
+                          {expandedStack === s.name ? "Hide" : "View"}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                   
@@ -111,10 +158,15 @@ export function Stacks() {
                       <TableCell colSpan={4} className="p-0 border-b">
                         <div className="p-4 pl-12 space-y-2">
                           {s.containers.map((c: any) => (
-                            <div key={c.Id} className="flex items-center justify-between bg-background p-3 rounded-md border border-border/50">
+                            <div 
+                              key={c.Id} 
+                              className="flex items-center justify-between bg-background p-3 rounded-md border border-border/50 hover:border-primary/50 cursor-pointer transition-colors"
+                              onClick={() => navigate(`/containers/${c.Id}`)}
+                              title="Click to view container details"
+                            >
                               <div className="flex items-center gap-3">
                                 <CubeIcon size={16} className="text-muted-foreground" />
-                                <span className="font-medium">{c.Names[0]?.replace("/", "") || "Unknown"}</span>
+                                <span className="font-medium hover:text-primary hover:underline">{c.Names[0]?.replace("/", "") || "Unknown"}</span>
                                 <Badge variant="outline" className="text-[10px] uppercase font-mono">{c.State}</Badge>
                               </div>
                               <span className="text-xs text-muted-foreground font-mono truncate max-w-[200px]">
@@ -126,7 +178,7 @@ export function Stacks() {
                       </TableCell>
                     </TableRow>
                   )}
-                </>
+                </Fragment>
               ))
             )}
           </TableBody>

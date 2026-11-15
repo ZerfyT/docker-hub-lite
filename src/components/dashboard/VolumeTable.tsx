@@ -138,7 +138,7 @@ export function VolumeTable({ volumes, onRefresh, selected = [], onSelectedChang
           ) : (
             paginatedVolumes.map((vol) => {
               const isSelected = selected.includes(vol.Name);
-              const dfData = systemDf?.Volumes?.find(v => v.Name === vol.Name);
+              const dfData = systemDf?.Volumes?.find((v: any) => v.Name === vol.Name);
               const size = dfData?.UsageData?.Size || 0;
               const refCount = dfData?.UsageData?.RefCount || 0;
 

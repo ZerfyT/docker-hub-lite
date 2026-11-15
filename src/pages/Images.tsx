@@ -5,11 +5,22 @@ import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 import { ImageTable } from "@/components/dashboard/ImageTable";
 import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function Images() {
   const { images, fetchImages, systemDf } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const danglingImagesCount = images.filter(img => !img.RepoTags || img.RepoTags.includes("<none>:<none>")).length;
   const totalSize = systemDf?.LayersSize || 0;
@@ -22,40 +33,39 @@ export function Images() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const filteredImages = images.filter((img) =>
-    img.RepoTags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredImages = images.filter((img) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    const matchesTag = img.RepoTags?.some((tag) => tag.toLowerCase().includes(query));
+    const matchesId = img.Id?.toLowerCase().includes(query);
+    return Boolean(matchesTag || matchesId);
+  });
 
-  const handleBulkAction = async (action: string) => {
+  const executeBulkDelete = async () => {
     if (selected.length === 0) return;
 
-    const isRemove = action === "remove_image";
-    const confirmMessage = isRemove ? "Are you sure you want to delete the selected images?" : "Are you sure?";
+    let successCount = 0;
+    let failCount = 0;
 
-    if (confirm(confirmMessage)) {
-      let successCount = 0;
-      let failCount = 0;
-
-      for (const id of selected) {
-        try {
-          await invoke(action, { id });
-          successCount++;
-        } catch (error) {
-          console.error(`Failed to execute ${action} on ${id}:`, error);
-          failCount++;
-        }
+    for (const id of selected) {
+      try {
+        await invoke("remove_image", { id });
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to execute remove_image on ${id}:`, error);
+        failCount++;
       }
-
-      if (successCount > 0) {
-        toast.success(`Successfully executed action on ${successCount} image(s)`);
-      }
-      if (failCount > 0) {
-        toast.error(`Failed to execute action on ${failCount} image(s)`);
-      }
-
-      setSelected([]);
-      fetchImages();
     }
+
+    if (successCount > 0) {
+      toast.success(`Successfully deleted ${successCount} image(s)`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to delete ${failCount} image(s)`);
+    }
+
+    setSelected([]);
+    fetchImages();
   };
 
   return (
@@ -93,11 +103,11 @@ export function Images() {
 
       <TableActionsBar
         itemName="images"
-        searchPlaceholder="Search images by repository or tag..."
+        searchPlaceholder="Search images by repository, tag, or ID..."
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         selectedCount={selected.length}
-        onDelete={() => handleBulkAction("remove_image")}
+        onDelete={() => setDeleteDialogOpen(true)}
         filteredCount={filteredImages.length}
         totalCount={images.length}
       />
@@ -110,6 +120,26 @@ export function Images() {
           onSelectedChange={setSelected}
         />
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete selected images?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selected.length} selected image(s)? Images currently used by containers cannot be removed until those containers are deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={executeBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

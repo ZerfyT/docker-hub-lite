@@ -1,7 +1,7 @@
 import { useStore } from "@/store/useStore";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { MoonIcon, SunIcon, ArrowsClockwise, HardDrivesIcon, BroomIcon, ShieldWarningIcon, RocketLaunchIcon, CodeIcon, TerminalWindowIcon } from "@phosphor-icons/react";
+import { MoonIcon, SunIcon, ArrowsClockwise, BroomIcon, ShieldWarningIcon, RocketLaunchIcon, CodeIcon, TerminalWindowIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";

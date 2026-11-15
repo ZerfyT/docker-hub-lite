@@ -2,27 +2,50 @@ import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { ReactNode, useEffect } from "react";
 import { useStore } from "@/store/useStore";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { fetchAllData, isPolling } = useStore();
+  const { fetchAllData, fetchFastData, fetchSystemDf, fetchSystemInfo, isPolling } = useStore();
 
   useEffect(() => {
-    // Initial fetch
+    // Initial fetch of all data
     fetchAllData();
 
-    if (!isPolling) return;
+    // Start event stream and listen for docker events to update state reactively
+    invoke("start_event_stream").catch(console.error);
 
-    // Set up global polling
-    const interval = setInterval(() => {
-      fetchAllData();
-    }, 3000);
+    const unlistenPromise = listen("docker-event", () => {
+      fetchFastData();
+    });
 
-    return () => clearInterval(interval);
-  }, [fetchAllData, isPolling]);
+    if (!isPolling) {
+      return () => {
+        unlistenPromise.then(unlisten => unlisten());
+      };
+    }
+
+    // Fast polling (containers, images, state, etc.)
+    const fastInterval = setInterval(() => {
+      fetchFastData();
+    }, 4000);
+
+    // Slower polling for heavy stats like system df and system info
+    const slowInterval = setInterval(() => {
+      fetchSystemDf();
+      fetchSystemInfo();
+    }, 30000);
+
+    return () => {
+      clearInterval(fastInterval);
+      clearInterval(slowInterval);
+      unlistenPromise.then(unlisten => unlisten());
+    };
+  }, [fetchAllData, fetchFastData, fetchSystemDf, fetchSystemInfo, isPolling]);
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden text-foreground">

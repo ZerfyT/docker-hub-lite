@@ -4,8 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
 import { useState, useMemo } from "react";
 import { PlugsIcon } from "@phosphor-icons/react";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { useNavigate } from "react-router-dom";
 
 export function Ports() {
+  const navigate = useNavigate();
   const { containers } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -80,17 +83,26 @@ export function Ports() {
             ) : (
               filteredPorts.map((p, i) => (
                 <TableRow key={`${p.containerId}-${i}`}>
-                  <TableCell className="font-medium">{p.containerName}</TableCell>
+                  <TableCell 
+                    className="font-medium cursor-pointer hover:text-primary hover:underline"
+                    onClick={() => navigate(`/containers/${p.containerId}`)}
+                  >
+                    {p.containerName}
+                  </TableCell>
                   <TableCell>
                     {p.publicPort ? (
-                      <span className="font-mono text-sm bg-muted/50 px-2 py-1 rounded-md border border-border/50">
+                      <span 
+                        onClick={() => openUrl(`http://localhost:${p.publicPort}`)}
+                        className="font-mono text-sm bg-muted/50 px-2 py-1 rounded-md border border-border/50 inline-flex items-center gap-1 cursor-pointer hover:bg-muted transition-colors"
+                        title="Click to open http://localhost in browser"
+                      >
                         <span className="text-muted-foreground">{p.ip}:</span>
-                        <span className="text-primary font-bold">{p.publicPort}</span>
-                        <span className="text-muted-foreground">{p.privatePort}</span>
+                        <span className="text-primary font-bold hover:underline">{p.publicPort}</span>
+                        <span className="text-muted-foreground"> &rarr; {p.privatePort}/{p.type}</span>
                       </span>
                     ) : (
                       <span className="font-mono text-sm text-muted-foreground bg-muted/30 px-2 py-1 rounded-md">
-                        {p.privatePort} (Internal)
+                        {p.privatePort}/{p.type} (Internal)
                       </span>
                     )}
                   </TableCell>

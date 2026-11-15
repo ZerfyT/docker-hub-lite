@@ -5,11 +5,22 @@ import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 import { NetworkTable } from "@/components/dashboard/NetworkTable";
 import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function Networks() {
   const { networks, fetchNetworks } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const builtinCount = networks.filter(net => ["bridge", "host", "none"].includes(net.Name)).length;
   const customCount = networks.length - builtinCount;
@@ -17,36 +28,32 @@ export function Networks() {
   const filteredNetworks = networks.filter((net) =>
     net.Name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  console.log(networks);
 
-
-  const handleBulkAction = async (action: string) => {
+  const executeBulkDelete = async () => {
     if (selected.length === 0) return;
 
-    if (confirm("Are you sure you want to delete the selected networks?")) {
-      let successCount = 0;
-      let failCount = 0;
+    let successCount = 0;
+    let failCount = 0;
 
-      for (const id of selected) {
-        try {
-          await invoke(action, { id });
-          successCount++;
-        } catch (error) {
-          console.error(`Failed to execute ${action} on ${id}:`, error);
-          failCount++;
-        }
+    for (const id of selected) {
+      try {
+        await invoke("remove_network", { id });
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to execute remove_network on ${id}:`, error);
+        failCount++;
       }
-
-      if (successCount > 0) {
-        toast.success(`Successfully executed action on ${successCount} network(s)`);
-      }
-      if (failCount > 0) {
-        toast.error(`Failed to execute action on ${failCount} network(s)`);
-      }
-
-      setSelected([]);
-      fetchNetworks();
     }
+
+    if (successCount > 0) {
+      toast.success(`Successfully deleted ${successCount} network(s)`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to delete ${failCount} network(s)`);
+    }
+
+    setSelected([]);
+    fetchNetworks();
   };
 
   return (
@@ -77,7 +84,7 @@ export function Networks() {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         selectedCount={selected.length}
-        onDelete={() => handleBulkAction("remove_network")}
+        onDelete={() => setDeleteDialogOpen(true)}
         filteredCount={filteredNetworks.length}
         totalCount={networks.length}
       />
@@ -90,6 +97,26 @@ export function Networks() {
           onSelectedChange={setSelected}
         />
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete selected networks?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selected.length} selected network(s)? Built-in networks and networks in active use cannot be removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={executeBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -7,7 +7,6 @@ import {
   FileTextIcon,
   CpuIcon,
   GearIcon,
-  UsersIcon,
   GithubLogoIcon,
   StarIcon,
   BoatIcon,

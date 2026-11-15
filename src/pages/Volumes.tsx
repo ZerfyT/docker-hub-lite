@@ -5,11 +5,22 @@ import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 import { VolumeTable } from "@/components/dashboard/VolumeTable";
 import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function Volumes() {
   const { volumes, fetchVolumes, systemDf } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   let totalSize = 0;
   let unusedCount = 0;
@@ -32,33 +43,31 @@ export function Volumes() {
     vol.Name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleBulkAction = async (action: string) => {
+  const executeBulkDelete = async () => {
     if (selected.length === 0) return;
     
-    if (confirm("Are you sure you want to delete the selected volumes?")) {
-      let successCount = 0;
-      let failCount = 0;
-      
-      for (const name of selected) {
-        try {
-          await invoke(action, { name });
-          successCount++;
-        } catch (error) {
-          console.error(`Failed to execute ${action} on ${name}:`, error);
-          failCount++;
-        }
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (const name of selected) {
+      try {
+        await invoke("remove_volume", { name });
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to execute remove_volume on ${name}:`, error);
+        failCount++;
       }
-      
-      if (successCount > 0) {
-        toast.success(`Successfully executed action on ${successCount} volume(s)`);
-      }
-      if (failCount > 0) {
-        toast.error(`Failed to execute action on ${failCount} volume(s)`);
-      }
-      
-      setSelected([]);
-      fetchVolumes();
     }
+    
+    if (successCount > 0) {
+      toast.success(`Successfully deleted ${successCount} volume(s)`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to delete ${failCount} volume(s)`);
+    }
+    
+    setSelected([]);
+    fetchVolumes();
   };
 
   return (
@@ -99,7 +108,7 @@ export function Volumes() {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         selectedCount={selected.length}
-        onDelete={() => handleBulkAction("remove_volume")}
+        onDelete={() => setDeleteDialogOpen(true)}
         filteredCount={filteredVolumes.length}
         totalCount={volumes.length}
       />
@@ -112,6 +121,26 @@ export function Volumes() {
           onSelectedChange={setSelected}
         />
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete selected volumes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {selected.length} selected volume(s)? All data stored within these volumes will be permanently erased.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={executeBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
