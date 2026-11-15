@@ -436,6 +436,132 @@ async fn backup_volume(name: String, path: String) -> Result<String, String> {
     }
 }
 
+#[derive(Deserialize, Debug)]
+struct PruneParams {
+    target: String, // "system" | "image" | "container" | "volume" | "builder" | "network"
+    all: bool,
+    volumes: bool,
+    until: Option<String>,
+    label: Option<String>,
+    label_not: Option<String>,
+    keep_storage: Option<String>,
+}
+
+#[tauri::command]
+async fn execute_custom_prune(state: State<'_, AppState>, params: PruneParams) -> Result<String, String> {
+    let mut cmd = tokio::process::Command::new("docker");
+
+    let subcmd = match params.target.as_str() {
+        "system" => vec!["system", "prune"],
+        "image" => vec!["image", "prune"],
+        "container" => vec!["container", "prune"],
+        "volume" => vec!["volume", "prune"],
+        "builder" => vec!["builder", "prune"],
+        "network" => vec!["network", "prune"],
+        _ => return Err("Invalid prune target".to_string()),
+    };
+
+    cmd.args(subcmd);
+    cmd.arg("-f"); // Force non-interactive
+
+    if params.all {
+        match params.target.as_str() {
+            "system" | "image" | "volume" | "builder" => {
+                cmd.arg("-a");
+            }
+            _ => {}
+        }
+    }
+
+    if params.volumes && params.target == "system" {
+        cmd.arg("--volumes");
+    }
+
+    if let Some(ref until) = params.until {
+        let trimmed = until.trim();
+        if !trimmed.is_empty() {
+            cmd.arg("--filter");
+            cmd.arg(format!("until={}", trimmed));
+        }
+    }
+
+    if let Some(ref label) = params.label {
+        let trimmed = label.trim();
+        if !trimmed.is_empty() {
+            cmd.arg("--filter");
+            cmd.arg(format!("label={}", trimmed));
+        }
+    }
+
+    if let Some(ref label_not) = params.label_not {
+        let trimmed = label_not.trim();
+        if !trimmed.is_empty() {
+            cmd.arg("--filter");
+            cmd.arg(format!("label!={}", trimmed));
+        }
+    }
+
+    if let Some(ref keep) = params.keep_storage {
+        let trimmed = keep.trim();
+        if !trimmed.is_empty() && params.target == "builder" {
+            cmd.arg("--keep-storage");
+            cmd.arg(trimmed);
+        }
+    }
+
+    let output_res = cmd.output().await;
+
+    match output_res {
+        Ok(output) => {
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+                if stdout.trim().is_empty() {
+                    Ok("Prune completed successfully. No matching unreferenced resources found to reclaim.".to_string())
+                } else {
+                    Ok(stdout)
+                }
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
+                Err(if stderr.trim().is_empty() {
+                    "Docker prune command exited with non-zero status.".to_string()
+                } else {
+                    stderr
+                })
+            }
+        }
+        Err(_) => {
+            // Fallback to Bollard API if docker binary execution failed
+            match params.target.as_str() {
+                "container" => {
+                    match state.docker.prune_containers(None::<bollard::container::PruneContainersOptions<String>>).await {
+                        Ok(res) => Ok(format!("Containers pruned. Reclaimed space: {} bytes", res.space_reclaimed.unwrap_or_default())),
+                        Err(e) => Err(e.to_string()),
+                    }
+                }
+                "image" => {
+                    match state.docker.prune_images(None::<bollard::image::PruneImagesOptions<String>>).await {
+                        Ok(res) => Ok(format!("Images pruned. Reclaimed space: {} bytes", res.space_reclaimed.unwrap_or_default())),
+                        Err(e) => Err(e.to_string()),
+                    }
+                }
+                "volume" => {
+                    match state.docker.prune_volumes(None::<bollard::volume::PruneVolumesOptions<String>>).await {
+                        Ok(res) => Ok(format!("Volumes pruned. Reclaimed space: {} bytes", res.space_reclaimed.unwrap_or_default())),
+                        Err(e) => Err(e.to_string()),
+                    }
+                }
+                "network" => {
+                    match state.docker.prune_networks(None::<bollard::network::PruneNetworksOptions<String>>).await {
+                        Ok(res) => Ok(format!("Networks pruned: {:?}", res.networks_deleted.unwrap_or_default())),
+                        Err(e) => Err(e.to_string()),
+                    }
+                }
+                _ => raw_system_prune().await,
+            }
+        }
+    }
+}
+
 async fn raw_system_prune() -> Result<String, String> {
     let output = tokio::process::Command::new("docker")
         .args(["system", "prune", "-af", "--volumes"])
@@ -1046,6 +1172,7 @@ fn main() {
             stream_container_logs,
             search_docker_images,
             get_image_tags,
+            execute_custom_prune,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

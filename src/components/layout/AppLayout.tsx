@@ -10,12 +10,14 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { fetchAllData, fetchFastData, fetchSystemDf, fetchSystemInfo, fetchHostStats, isPolling } = useStore();
+  const { fetchAllData, fetchFastData, fetchSystemDf, fetchSystemInfo, fetchHostStats, isPolling, pollingInterval, enableTelemetry } = useStore();
 
   useEffect(() => {
     // Initial fetch of all data
     fetchAllData();
-    fetchHostStats();
+    if (enableTelemetry) {
+      fetchHostStats();
+    }
 
     // Start event stream and listen for docker events to update state reactively
     invoke("start_event_stream").catch(console.error);
@@ -25,13 +27,16 @@ export function AppLayout({ children }: AppLayoutProps) {
     });
 
     // 1-second continuous host telemetry stream for ResourceChart (persists across page switching)
-    const hostStatsInterval = setInterval(() => {
-      fetchHostStats();
-    }, 1000);
+    let hostStatsInterval: NodeJS.Timeout | undefined;
+    if (enableTelemetry) {
+      hostStatsInterval = setInterval(() => {
+        fetchHostStats();
+      }, 1000);
+    }
 
     if (!isPolling) {
       return () => {
-        clearInterval(hostStatsInterval);
+        if (hostStatsInterval) clearInterval(hostStatsInterval);
         unlistenPromise.then(unlisten => unlisten());
       };
     }
@@ -39,7 +44,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     // Fast polling (containers, images, state, etc.)
     const fastInterval = setInterval(() => {
       fetchFastData();
-    }, 4000);
+    }, pollingInterval || 4000);
 
     // Slower polling for heavy stats like system df and system info
     const slowInterval = setInterval(() => {
@@ -48,12 +53,12 @@ export function AppLayout({ children }: AppLayoutProps) {
     }, 30000);
 
     return () => {
-      clearInterval(hostStatsInterval);
+      if (hostStatsInterval) clearInterval(hostStatsInterval);
       clearInterval(fastInterval);
       clearInterval(slowInterval);
       unlistenPromise.then(unlisten => unlisten());
     };
-  }, [fetchAllData, fetchFastData, fetchSystemDf, fetchSystemInfo, fetchHostStats, isPolling]);
+  }, [fetchAllData, fetchFastData, fetchSystemDf, fetchSystemInfo, fetchHostStats, isPolling, pollingInterval, enableTelemetry]);
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden text-foreground">

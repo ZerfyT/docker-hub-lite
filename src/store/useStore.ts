@@ -99,12 +99,33 @@ interface AppState {
   fetchAllData: () => Promise<void>;
   fetchFastData: () => Promise<void>;
 
+  // System & Application Settings
+  pollingInterval: number;
+  setPollingInterval: (ms: number) => void;
+  enableTelemetry: boolean;
+  setEnableTelemetry: (enabled: boolean) => void;
+  confirmDestructive: boolean;
+  setConfirmDestructive: (enabled: boolean) => void;
+  containerShell: string;
+  setContainerShell: (shell: string) => void;
+  defaultLogTail: number;
+  setDefaultLogTail: (lines: number) => void;
+
   // Color Scheme
   mode: "light" | "dark";
   setMode: (mode: "light" | "dark") => void;
 
   // Prune
   systemPrune: () => Promise<string>;
+  executeCustomPrune: (params: {
+    target: "system" | "image" | "container" | "volume" | "builder" | "network";
+    all: boolean;
+    volumes: boolean;
+    until?: string;
+    label?: string;
+    label_not?: string;
+    keep_storage?: string;
+  }) => Promise<string>;
 
   // Daemon JSON
   daemonJson: string | null;
@@ -155,6 +176,36 @@ export const useStore = create<AppState>((set, get) => ({
   setMode: (mode) => {
     localStorage.setItem("docker-lite-mode", mode);
     set({ mode });
+  },
+
+  pollingInterval: parseInt(localStorage.getItem("docker-lite-polling-interval") || "4000", 10),
+  setPollingInterval: (pollingInterval) => {
+    localStorage.setItem("docker-lite-polling-interval", pollingInterval.toString());
+    set({ pollingInterval });
+  },
+
+  enableTelemetry: localStorage.getItem("docker-lite-telemetry") !== "false",
+  setEnableTelemetry: (enableTelemetry) => {
+    localStorage.setItem("docker-lite-telemetry", enableTelemetry ? "true" : "false");
+    set({ enableTelemetry });
+  },
+
+  confirmDestructive: localStorage.getItem("docker-lite-confirm-destructive") !== "false",
+  setConfirmDestructive: (confirmDestructive) => {
+    localStorage.setItem("docker-lite-confirm-destructive", confirmDestructive ? "true" : "false");
+    set({ confirmDestructive });
+  },
+
+  containerShell: localStorage.getItem("docker-lite-shell") || "default",
+  setContainerShell: (containerShell) => {
+    localStorage.setItem("docker-lite-shell", containerShell);
+    set({ containerShell });
+  },
+
+  defaultLogTail: parseInt(localStorage.getItem("docker-lite-log-tail") || "150", 10),
+  setDefaultLogTail: (defaultLogTail) => {
+    localStorage.setItem("docker-lite-log-tail", defaultLogTail.toString());
+    set({ defaultLogTail });
   },
 
   dockerState: "Disconnected",
@@ -261,6 +312,17 @@ export const useStore = create<AppState>((set, get) => ({
       return result;
     } catch (error) {
       console.error("Failed to prune system:", error);
+      throw error;
+    }
+  },
+
+  executeCustomPrune: async (params) => {
+    try {
+      const result = await invoke<string>("execute_custom_prune", { params });
+      get().fetchAllData();
+      return result;
+    } catch (error) {
+      console.error("Failed to execute custom prune:", error);
       throw error;
     }
   },
