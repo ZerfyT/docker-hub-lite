@@ -34,7 +34,6 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react";
 import { invoke } from "@tauri-apps/api/core";
-import { Command } from "@tauri-apps/plugin-shell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,8 +92,8 @@ export function ContainerTable({ containers, onRefresh, selected = [], onSelecte
 
   const handleTerminal = async (id: string) => {
     try {
-      const command = Command.create('run-sh', ['-c', `x-terminal-emulator -e docker exec -it ${id} sh || gnome-terminal -- docker exec -it ${id} sh`]);
-      await command.spawn();
+      await invoke("open_container_terminal", { id });
+      toast.info("Opening terminal session...");
     } catch (error) {
       const msg = `Error: Failed to open terminal, ${error}`;
       console.error(msg);

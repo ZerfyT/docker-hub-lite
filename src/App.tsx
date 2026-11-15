@@ -12,6 +12,7 @@ import { SystemInfo } from "@/pages/SystemInfo";
 import { AppSettings } from "@/pages/AppSettings";
 import { Ports } from "@/pages/Ports";
 import { Stacks } from "@/pages/Stacks";
+import { DevStarters } from "@/pages/DevStarters";
 import { Events } from "@/pages/Events";
 import { NetworkMap } from "@/pages/NetworkMap";
 import { Registries } from "@/pages/Registries";
@@ -47,6 +48,7 @@ function App() {
           <Route path="/events" element={<Events />} />
           <Route path="/ports" element={<Ports />} />
           <Route path="/stacks" element={<Stacks />} />
+          <Route path="/starters" element={<DevStarters />} />
           <Route path="/topology" element={<NetworkMap />} />
           <Route path="/registries" element={<Registries />} />
           <Route path="/system-info" element={<SystemInfo />} />

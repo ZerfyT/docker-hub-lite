@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { InfoIcon } from "@phosphor-icons/react";
+import { InfoIcon, PlusIcon } from "@phosphor-icons/react";
 import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 import { VolumeTable } from "@/components/dashboard/VolumeTable";
 import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
+import { Button } from "@/components/ui/button";
+import { CreateVolumeModal } from "@/components/modals/CreateVolumeModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +23,7 @@ export function Volumes() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   let totalSize = 0;
   let unusedCount = 0;
@@ -72,10 +75,15 @@ export function Volumes() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 relative">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between">
+        <div>
           <h2 className="text-2xl font-bold tracking-tight">Volumes</h2>
+          <p className="text-muted-foreground text-sm">Manage persistent Docker storage volumes.</p>
         </div>
+        <Button className="gap-2" onClick={() => setCreateModalOpen(true)}>
+          <PlusIcon className="h-4 w-4" />
+          Create Volume
+        </Button>
       </div>
 
       <div className="flex items-center gap-16 mb-4 mt-2">
@@ -141,6 +149,8 @@ export function Volumes() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <CreateVolumeModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
     </div>
   );
 }

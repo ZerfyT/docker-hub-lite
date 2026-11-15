@@ -14,6 +14,7 @@ import {
   ActivityIcon,
   GraphIcon,
   ShieldCheckIcon,
+  RocketLaunchIcon,
 } from "@phosphor-icons/react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -33,6 +34,7 @@ const primaryNav = [
   { name: "Networks", path: "/networks", icon: NetworkIcon },
   { name: "Ports", path: "/ports", icon: PlugsIcon },
   { name: "Stacks", path: "/stacks", icon: StackIcon },
+  { name: "Dev Starters", path: "/starters", icon: RocketLaunchIcon },
   { name: "Network Map", path: "/topology", icon: GraphIcon },
   { name: "Registries", path: "/registries", icon: ShieldCheckIcon },
   { name: "Event Log", path: "/events", icon: ActivityIcon },

@@ -7,12 +7,14 @@ import { Switch } from "@/components/ui/switch";
 import { invoke } from "@tauri-apps/api/core";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { RunContainerModal } from "@/components/modals/RunContainerModal";
 
 export function Containers() {
   const { containers, fetchContainers } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [showOnlyRunning, setShowOnlyRunning] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [runModalOpen, setRunModalOpen] = useState(false);
 
   const [totalCPU, setTotalCPU] = useState(0);
   const [totalMem, setTotalMem] = useState(0);
@@ -107,11 +109,15 @@ export function Containers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 relative">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between">
+        <div>
           <h2 className="text-2xl font-bold tracking-tight">Containers</h2>
-          <span className="text-xs text-primary cursor-pointer font-medium hover:underline pb-1">Give feedback</span>
+          <p className="text-muted-foreground text-sm">Monitor, inspect, and run container instances.</p>
         </div>
+        <Button className="gap-2" onClick={() => setRunModalOpen(true)}>
+          <PlayIcon className="h-4 w-4 fill-current" />
+          New Container
+        </Button>
       </div>
 
       <div className="flex items-center gap-16 mb-4 mt-2">
@@ -191,6 +197,11 @@ export function Containers() {
           onSelectedChange={setSelected}
         />
       </div>
+
+      <RunContainerModal
+        open={runModalOpen}
+        onOpenChange={setRunModalOpen}
+      />
     </div>
   );
 }

@@ -26,7 +26,8 @@ import {
   PlayIcon,
   PauseIcon,
   ArrowClockwiseIcon,
-  TrashIcon
+  TrashIcon,
+  KeyIcon,
 } from "@phosphor-icons/react";
 
 import { LogsTab } from "./details-tabs/LogsTab";
@@ -35,6 +36,7 @@ import { BindMountsTab } from "./details-tabs/BindMountsTab";
 import { StatsTab } from "./details-tabs/StatsTab";
 import { ExecTab } from "./details-tabs/ExecTab";
 import { FilesTab } from "./details-tabs/FilesTab";
+import { EnvTab } from "./details-tabs/EnvTab";
 
 export function ContainerDetails() {
   const { id } = useParams<{ id: string }>();
@@ -94,6 +96,7 @@ export function ContainerDetails() {
 
   const tabs = [
     { id: "logs", label: "Logs", icon: FileTextIcon },
+    { id: "env", label: "Environment", icon: KeyIcon },
     { id: "inspect", label: "Inspect", icon: MagnifyingGlassIcon },
     { id: "binds", label: "Bind mounts", icon: HardDrivesIcon },
     { id: "exec", label: "Exec", icon: TerminalWindowIcon },
@@ -156,6 +159,25 @@ export function ContainerDetails() {
             <ArrowClockwiseIcon className="h-4 w-4" />
           </Button>
 
+          {isRunning && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={async () => {
+                try {
+                  await invoke("open_container_terminal", { id });
+                  toast.info("Opening terminal session...");
+                } catch (e) {
+                  toast.error(`Failed to open terminal: ${e}`);
+                }
+              }}
+              title="Open Shell in Terminal"
+            >
+              <TerminalWindowIcon className="h-4 w-4" />
+            </Button>
+          )}
+
           <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-red-500 ml-2" onClick={() => setShowDeleteDialog(true)} title="Delete">
             <TrashIcon className="h-4 w-4" />
           </Button>
@@ -182,6 +204,7 @@ export function ContainerDetails() {
       {/* Tab Content */}
       <div className="flex-1 min-h-0 border rounded-md overflow-hidden bg-background">
         {defaultTab === "logs" && <LogsTab containerId={id as string} />}
+        {defaultTab === "env" && <EnvTab envList={inspectData?.Config?.Env || []} />}
         {defaultTab === "inspect" && <InspectTab inspectData={inspectData} />}
         {defaultTab === "binds" && <BindMountsTab mounts={inspectData?.Mounts || []} />}
         {defaultTab === "exec" && <ExecTab containerId={id as string} isRunning={isRunning} />}

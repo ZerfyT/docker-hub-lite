@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { InfoIcon } from "@phosphor-icons/react";
+import { InfoIcon, ArrowDownIcon, PlayIcon } from "@phosphor-icons/react";
 import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 import { ImageTable } from "@/components/dashboard/ImageTable";
 import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
+import { Button } from "@/components/ui/button";
+import { PullImageModal } from "@/components/modals/PullImageModal";
+import { RunContainerModal } from "@/components/modals/RunContainerModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +24,9 @@ export function Images() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [pullModalOpen, setPullModalOpen] = useState(false);
+  const [runModalOpen, setRunModalOpen] = useState(false);
+  const [selectedImageForRun, setSelectedImageForRun] = useState("");
 
   const danglingImagesCount = images.filter(img => !img.RepoTags || img.RepoTags.includes("<none>:<none>")).length;
   const totalSize = systemDf?.LayersSize || 0;
@@ -70,9 +76,20 @@ export function Images() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 relative">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between">
+        <div>
           <h2 className="text-2xl font-bold tracking-tight">Images</h2>
+          <p className="text-muted-foreground text-sm">Manage local Docker images and pull from registries.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setPullModalOpen(true)}>
+            <ArrowDownIcon className="h-4 w-4" />
+            Pull Image
+          </Button>
+          <Button className="gap-2" onClick={() => { setSelectedImageForRun(""); setRunModalOpen(true); }}>
+            <PlayIcon className="h-4 w-4 fill-current" />
+            Run Container
+          </Button>
         </div>
       </div>
 
@@ -118,6 +135,10 @@ export function Images() {
           onRefresh={fetchImages}
           selected={selected}
           onSelectedChange={setSelected}
+          onRunImage={(img) => {
+            setSelectedImageForRun(img);
+            setRunModalOpen(true);
+          }}
         />
       </div>
 
@@ -140,6 +161,12 @@ export function Images() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <PullImageModal open={pullModalOpen} onOpenChange={setPullModalOpen} />
+      <RunContainerModal
+        open={runModalOpen}
+        onOpenChange={setRunModalOpen}
+        defaultImage={selectedImageForRun}
+      />
     </div>
   );
 }

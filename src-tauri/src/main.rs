@@ -582,6 +582,408 @@ async fn start_event_stream(app: tauri::AppHandle, state: State<'_, AppState>) -
     Ok(())
 }
 
+#[derive(Serialize, Clone)]
+struct PullProgress {
+    status: Option<String>,
+    progress: Option<String>,
+    id: Option<String>,
+}
+
+#[tauri::command]
+async fn pull_image(app: tauri::AppHandle, state: State<'_, AppState>, image: String) -> Result<String, String> {
+    use futures_util::StreamExt;
+    use tauri::Emitter;
+
+    let options = bollard::image::CreateImageOptions {
+        from_image: image.clone(),
+        ..Default::default()
+    };
+
+    let mut stream = state.docker.create_image(Some(options), None, None);
+    while let Some(msg) = stream.next().await {
+        match msg {
+            Ok(info) => {
+                let _ = app.emit("image-pull-progress", PullProgress {
+                    status: info.status,
+                    progress: info.progress,
+                    id: info.id,
+                });
+            }
+            Err(e) => return Err(e.to_string()),
+        }
+    }
+    Ok(format!("Successfully pulled {}", image))
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct DockerImageSearchResult {
+    pub name: String,
+    pub description: String,
+    pub is_official: bool,
+    pub star_count: i64,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct DockerImageTagResult {
+    pub name: String,
+    pub full_size: Option<i64>,
+    pub last_updated: Option<String>,
+}
+
+fn urlencoding_simple(s: &str) -> String {
+    let mut encoded = String::new();
+    for c in s.chars() {
+        if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' || c == '~' {
+            encoded.push(c);
+        } else {
+            encoded.push_str(&format!("%{:02X}", c as u32));
+        }
+    }
+    encoded
+}
+
+#[tauri::command]
+async fn search_docker_images(
+    state: State<'_, AppState>,
+    term: String,
+) -> Result<Vec<DockerImageSearchResult>, String> {
+    let query = term.trim().to_string();
+    if query.is_empty() {
+        return Ok(vec![]);
+    }
+
+    // Try Bollard docker.search_images first
+    let bollard_res = {
+        let options = bollard::image::SearchImagesOptions {
+            term: query.clone(),
+            limit: Some(25),
+            filters: std::collections::HashMap::new(),
+        };
+        state.docker.search_images(options).await
+    };
+
+    if let Ok(items) = bollard_res {
+        if !items.is_empty() {
+            let mut results: Vec<DockerImageSearchResult> = items
+                .into_iter()
+                .map(|item| DockerImageSearchResult {
+                    name: item.name.unwrap_or_default(),
+                    description: item.description.unwrap_or_default(),
+                    is_official: item.is_official.unwrap_or(false),
+                    star_count: item.star_count.unwrap_or(0),
+                })
+                .collect();
+            results.sort_by(|a, b| {
+                b.is_official
+                    .cmp(&a.is_official)
+                    .then_with(|| b.star_count.cmp(&a.star_count))
+            });
+            return Ok(results);
+        }
+    }
+
+    // Fallback: Query Docker Hub HTTP API via curl
+    let url = format!(
+        "https://hub.docker.com/v2/search/repositories/?query={}&page_size=25",
+        urlencoding_simple(&query)
+    );
+
+    let output = tokio::process::Command::new("curl")
+        .args(["-sSL", "--max-time", "5", &url])
+        .output()
+        .await
+        .map_err(|e| format!("Failed to execute search: {}", e))?;
+
+    if output.status.success() {
+        if let Ok(val) = serde_json::from_slice::<serde_json::Value>(&output.stdout) {
+            if let Some(arr) = val.get("results").and_then(|r| r.as_array()) {
+                let mut results: Vec<DockerImageSearchResult> = arr
+                    .iter()
+                    .map(|item| DockerImageSearchResult {
+                        name: item.get("repo_name").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                        description: item.get("short_description").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                        is_official: item.get("is_official").and_then(|v| v.as_bool()).unwrap_or(false),
+                        star_count: item.get("star_count").and_then(|v| v.as_i64()).unwrap_or(0),
+                    })
+                    .filter(|item| !item.name.is_empty())
+                    .collect();
+
+                results.sort_by(|a, b| {
+                    b.is_official
+                        .cmp(&a.is_official)
+                        .then_with(|| b.star_count.cmp(&a.star_count))
+                });
+                return Ok(results);
+            }
+        }
+    }
+
+    Ok(vec![])
+}
+
+#[tauri::command]
+async fn get_image_tags(
+    image: String,
+    filter: Option<String>,
+) -> Result<Vec<DockerImageTagResult>, String> {
+    let mut raw_image = image.trim().to_string();
+    if raw_image.is_empty() {
+        return Ok(vec![]);
+    }
+
+    // If image has a tag in it, extract filter if filter is None/empty
+    let mut tag_filter = filter.unwrap_or_default().trim().to_string();
+    let (parsed_img, parsed_tag) = match raw_image.split_once(':') {
+        Some((img, tag)) => (img.trim().to_string(), tag.trim().to_string()),
+        None => (raw_image.clone(), String::new()),
+    };
+    raw_image = parsed_img;
+    if tag_filter.is_empty() && !parsed_tag.is_empty() {
+        tag_filter = parsed_tag;
+    }
+
+    // Strip common registry prefixes like docker.io/
+    if let Some(stripped) = raw_image.strip_prefix("docker.io/") {
+        raw_image = stripped.to_string();
+    }
+
+    let repo_path = if !raw_image.contains('/') {
+        format!("library/{}", raw_image)
+    } else {
+        raw_image
+    };
+
+    let mut url = format!(
+        "https://hub.docker.com/v2/repositories/{}/tags?page_size=30",
+        repo_path
+    );
+    if !tag_filter.is_empty() {
+        url.push_str(&format!("&name={}", urlencoding_simple(&tag_filter)));
+    }
+
+    let output = tokio::process::Command::new("curl")
+        .args(["-sSL", "--max-time", "5", &url])
+        .output()
+        .await
+        .map_err(|e| format!("Failed to query tags: {}", e))?;
+
+    if output.status.success() {
+        if let Ok(val) = serde_json::from_slice::<serde_json::Value>(&output.stdout) {
+            if let Some(arr) = val.get("results").and_then(|r| r.as_array()) {
+                let tags: Vec<DockerImageTagResult> = arr
+                    .iter()
+                    .filter_map(|item| {
+                        let name = item.get("name").and_then(|v| v.as_str())?.to_string();
+                        let full_size = item.get("full_size").and_then(|v| v.as_i64());
+                        let last_updated = item.get("last_updated").and_then(|v| v.as_str()).map(|s| s.to_string());
+                        Some(DockerImageTagResult {
+                            name,
+                            full_size,
+                            last_updated,
+                        })
+                    })
+                    .collect();
+                if !tags.is_empty() {
+                    return Ok(tags);
+                }
+            }
+        }
+    }
+
+    // If query failed or returned empty, return common fallback tags
+    let fallbacks = vec!["latest", "alpine", "slim", "bookworm", "bullseye", "lts", "dev"];
+    let filtered_fallbacks: Vec<DockerImageTagResult> = fallbacks
+        .into_iter()
+        .filter(|t| tag_filter.is_empty() || t.contains(&tag_filter))
+        .map(|t| DockerImageTagResult {
+            name: t.to_string(),
+            full_size: None,
+            last_updated: None,
+        })
+        .collect();
+
+    Ok(filtered_fallbacks)
+}
+
+#[derive(Deserialize)]
+struct PortMapping {
+    host_port: u16,
+    container_port: u16,
+    protocol: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct CreateContainerArgs {
+    name: Option<String>,
+    image: String,
+    ports: Option<Vec<PortMapping>>,
+    env: Option<Vec<String>>,
+    volumes: Option<Vec<String>>,
+    restart_policy: Option<String>,
+}
+
+#[tauri::command]
+async fn create_and_start_container(state: State<'_, AppState>, args: CreateContainerArgs) -> Result<String, String> {
+    use std::collections::HashMap;
+    use bollard::models::{HostConfig, PortBinding, RestartPolicy, RestartPolicyNameEnum};
+
+    let mut port_bindings = HashMap::new();
+    let mut exposed_ports = HashMap::new();
+
+    if let Some(ports) = args.ports {
+        for p in ports {
+            let proto = p.protocol.unwrap_or_else(|| "tcp".to_string()).to_lowercase();
+            let key = format!("{}/{}", p.container_port, proto);
+            let binding = PortBinding {
+                host_ip: Some("0.0.0.0".to_string()),
+                host_port: Some(p.host_port.to_string()),
+            };
+            port_bindings.insert(key.clone(), Some(vec![binding]));
+            exposed_ports.insert(key, HashMap::new());
+        }
+    }
+
+    let restart_policy = args.restart_policy.map(|rp| {
+        let name = match rp.as_str() {
+            "always" => RestartPolicyNameEnum::ALWAYS,
+            "unless-stopped" => RestartPolicyNameEnum::UNLESS_STOPPED,
+            "on-failure" => RestartPolicyNameEnum::ON_FAILURE,
+            _ => RestartPolicyNameEnum::NO,
+        };
+        RestartPolicy {
+            name: Some(name),
+            maximum_retry_count: None,
+        }
+    });
+
+    let host_config = HostConfig {
+        port_bindings: if port_bindings.is_empty() { None } else { Some(port_bindings) },
+        binds: args.volumes,
+        restart_policy,
+        ..Default::default()
+    };
+
+    let config = bollard::container::Config {
+        image: Some(args.image),
+        env: args.env,
+        exposed_ports: if exposed_ports.is_empty() { None } else { Some(exposed_ports) },
+        host_config: Some(host_config),
+        ..Default::default()
+    };
+
+    let options = args.name.and_then(|n| {
+        let trimmed = n.trim().to_string();
+        if trimmed.is_empty() { None } else {
+            Some(bollard::container::CreateContainerOptions {
+                name: trimmed,
+                platform: None,
+            })
+        }
+    });
+
+    let res = state.docker.create_container(options, config).await.map_err(|e| e.to_string())?;
+    let container_id = res.id;
+
+    state.docker.start_container::<String>(&container_id, None).await.map_err(|e| e.to_string())?;
+
+    Ok(container_id)
+}
+
+#[tauri::command]
+async fn create_volume(state: State<'_, AppState>, name: String, driver: Option<String>) -> Result<String, String> {
+    let options = bollard::volume::CreateVolumeOptions {
+        name,
+        driver: driver.unwrap_or_else(|| "local".to_string()),
+        ..Default::default()
+    };
+    match state.docker.create_volume(options).await {
+        Ok(vol) => Ok(vol.name),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+async fn create_network(state: State<'_, AppState>, name: String, driver: Option<String>) -> Result<String, String> {
+    let options = bollard::network::CreateNetworkOptions {
+        name,
+        driver: driver.unwrap_or_else(|| "bridge".to_string()),
+        ..Default::default()
+    };
+    match state.docker.create_network(options).await {
+        Ok(res) => Ok(res.id.unwrap_or_default()),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+async fn open_container_terminal(id: String) -> Result<String, String> {
+    let script = format!(
+        r#"
+        if command -v gnome-terminal >/dev/null 2>&1; then
+            gnome-terminal -- docker exec -it "{0}" sh -c "bash || sh"
+        elif command -v konsole >/dev/null 2>&1; then
+            konsole -e docker exec -it "{0}" sh -c "bash || sh"
+        elif command -v x-terminal-emulator >/dev/null 2>&1; then
+            x-terminal-emulator -e "docker exec -it \"{0}\" sh -c \"bash || sh\""
+        elif command -v xterm >/dev/null 2>&1; then
+            xterm -e "docker exec -it \"{0}\" sh -c \"bash || sh\""
+        elif command -v open >/dev/null 2>&1; then
+            osascript -e 'tell application "Terminal" to do script "docker exec -it {0} sh -c \"bash || sh\""'
+        else
+            exit 1
+        fi
+        "#,
+        id
+    );
+
+    let output = tokio::process::Command::new("sh")
+        .arg("-c")
+        .arg(script)
+        .spawn();
+
+    match output {
+        Ok(_) => Ok("Terminal opened".to_string()),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+async fn stream_container_logs(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    id: String,
+) -> Result<(), String> {
+    use futures_util::StreamExt;
+    use tauri::Emitter;
+
+    let options = Some(bollard::container::LogsOptions::<String> {
+        stdout: true,
+        stderr: true,
+        follow: true,
+        tail: "150".to_string(),
+        timestamps: true,
+        ..Default::default()
+    });
+
+    let docker = state.docker.clone();
+    let container_id = id.clone();
+    let event_name = format!("container-log-stream-{}", container_id);
+
+    tauri::async_runtime::spawn(async move {
+        let mut stream = docker.logs(&container_id, options);
+        while let Some(res) = stream.next().await {
+            match res {
+                Ok(log) => {
+                    let _ = app.emit(&event_name, log.to_string());
+                }
+                Err(_) => break,
+            }
+        }
+    });
+
+    Ok(())
+}
+
 fn main() {
     // Connect to the local Docker socket with fallback
     let docker = Docker::connect_with_local_defaults().unwrap_or_else(|e| {
@@ -636,6 +1038,14 @@ fn main() {
             edit_daemon_json_external,
             start_event_stream,
             get_docker_config,
+            create_volume,
+            create_network,
+            pull_image,
+            create_and_start_container,
+            open_container_terminal,
+            stream_container_logs,
+            search_docker_images,
+            get_image_tags,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

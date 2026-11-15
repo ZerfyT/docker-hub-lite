@@ -36,9 +36,10 @@ interface ImageTableProps {
   onRefresh: () => void;
   selected?: string[];
   onSelectedChange?: (selected: string[]) => void;
+  onRunImage?: (imageTag: string) => void;
 }
 
-export function ImageTable({ images, onRefresh, selected = [], onSelectedChange }: ImageTableProps) {
+export function ImageTable({ images, onRefresh, selected = [], onSelectedChange, onRunImage }: ImageTableProps) {
   const [imageToDelete, setImageToDelete] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -158,6 +159,15 @@ export function ImageTable({ images, onRefresh, selected = [], onSelectedChange 
                   </TableCell>
                   <TableCell className="text-right pr-4">
                     <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                        title="Run container with options"
+                        onClick={() => onRunImage?.(img.RepoTags?.[0] && !img.RepoTags[0].includes("<none>") ? img.RepoTags[0] : img.Id)}
+                      >
+                        <PlayIcon className="h-4 w-4 fill-current" />
+                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
@@ -165,6 +175,9 @@ export function ImageTable({ images, onRefresh, selected = [], onSelectedChange 
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuItem onClick={() => onRunImage?.(img.RepoTags?.[0] && !img.RepoTags[0].includes("<none>") ? img.RepoTags[0] : img.Id)}>
+                            <PlayIcon className="mr-2 h-4 w-4" /> Run with Options...
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={async () => {
                             try {
                               await invoke("quick_run_image", { id: img.Id });
@@ -174,7 +187,7 @@ export function ImageTable({ images, onRefresh, selected = [], onSelectedChange 
                               toast.error(`Failed to quick run: ${e}`);
                             }
                           }}>
-                            <PlayIcon className="mr-2 h-4 w-4" /> Quick Run
+                            <PlayIcon className="mr-2 h-4 w-4 text-muted-foreground" /> Quick Run (headless)
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => copyId(img.Id)}>
                             <CopyIcon className="mr-2 h-4 w-4" /> Copy ID

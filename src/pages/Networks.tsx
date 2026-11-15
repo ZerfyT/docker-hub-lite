@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { InfoIcon } from "@phosphor-icons/react";
+import { InfoIcon, PlusIcon } from "@phosphor-icons/react";
 import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 import { NetworkTable } from "@/components/dashboard/NetworkTable";
 import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
+import { Button } from "@/components/ui/button";
+import { CreateNetworkModal } from "@/components/modals/CreateNetworkModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +23,7 @@ export function Networks() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const builtinCount = networks.filter(net => ["bridge", "host", "none"].includes(net.Name)).length;
   const customCount = networks.length - builtinCount;
@@ -58,10 +61,15 @@ export function Networks() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 relative">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between">
+        <div>
           <h2 className="text-2xl font-bold tracking-tight">Networks</h2>
+          <p className="text-muted-foreground text-sm">Manage container network interfaces and drivers.</p>
         </div>
+        <Button className="gap-2" onClick={() => setCreateModalOpen(true)}>
+          <PlusIcon className="h-4 w-4" />
+          Create Network
+        </Button>
       </div>
 
       <div className="flex items-center gap-16 mb-4 mt-2">
@@ -117,6 +125,8 @@ export function Networks() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <CreateNetworkModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
     </div>
   );
 }
