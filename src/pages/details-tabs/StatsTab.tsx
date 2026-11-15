@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowsClockwiseIcon, CpuIcon, MemoryIcon, HardDrivesIcon, GlobeIcon } from "@phosphor-icons/react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowsClockwiseIcon, CpuIcon, HardDriveIcon, HardDrivesIcon, GlobeIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ContainerStatsChart } from "../../components/dashboard/ContainerStatsChart";
 
-export function StatsTab({ containerId, isRunning }: { containerId: string, isRunning: boolean }) {
+export function StatsTab({ containerId, isRunning }: { containerId: string; isRunning: boolean }) {
   const [stats, setStats] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,7 @@ export function StatsTab({ containerId, isRunning }: { containerId: string, isRu
       let cpuPerc = 0.0;
       let netRx = 0, netTx = 0;
       let blockRead = 0, blockWrite = 0;
-      
+
       const usage = parsed.memory_stats?.usage || 0;
       const cache = parsed.memory_stats?.stats?.cache || 0;
       const memUsage = Math.max(0, usage - cache);
@@ -33,7 +33,7 @@ export function StatsTab({ containerId, isRunning }: { containerId: string, isRu
       if (systemDelta > 0 && cpuDelta > 0) {
         cpuPerc = (cpuDelta / systemDelta) * onlineCpus * 100;
       }
-      
+
       if (parsed.networks) {
         for (const key of Object.keys(parsed.networks)) {
           netRx += parsed.networks[key].rx_bytes;
@@ -47,16 +47,19 @@ export function StatsTab({ containerId, isRunning }: { containerId: string, isRu
         }
       }
 
-      setHistory(prev => {
-        const newData = [...prev, {
-          time: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          cpu: Number(cpuPerc.toFixed(2)),
-          mem: memUsage,
-          netRx,
-          netTx,
-          blockRead,
-          blockWrite
-        }];
+      setHistory((prev) => {
+        const newData = [
+          ...prev,
+          {
+            time: new Date().toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+            cpu: Number(cpuPerc.toFixed(2)),
+            mem: memUsage,
+            netRx,
+            netTx,
+            blockRead,
+            blockWrite,
+          },
+        ];
         return newData.slice(-30);
       });
     } catch (error) {
@@ -70,15 +73,15 @@ export function StatsTab({ containerId, isRunning }: { containerId: string, isRu
     let interval: NodeJS.Timeout;
     if (isRunning) {
       fetchStats();
-      interval = setInterval(fetchStats, 5000);
+      interval = setInterval(fetchStats, 4000);
     }
     return () => clearInterval(interval);
   }, [containerId, isRunning]);
 
   if (!isRunning) {
     return (
-      <div className="flex h-full items-center justify-center border-t border-border/50 text-muted-foreground p-8">
-        Container is not running. Start the container to view live stats.
+      <div className="flex h-full items-center justify-center border border-dashed border-border/70 rounded-xl text-muted-foreground p-8 font-mono text-sm bg-muted/10">
+        Container is stopped. Start the container to stream real-time metrics.
       </div>
     );
   }
@@ -91,11 +94,14 @@ export function StatsTab({ containerId, isRunning }: { containerId: string, isRu
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  // Derive current values
-  let currentCpuPerc = 0.0;
-  let currentMemUsage = "0 B", currentMemLimit = "0 B", currentMemPerc = 0.0;
-  let currentNetRx = 0, currentNetTx = 0;
-  let currentBlockRead = 0, currentBlockWrite = 0;
+  let currentCpuPerc = 0;
+  let currentMemUsage = "0 B";
+  let currentMemLimit = "0 B";
+  let currentMemPerc = 0;
+  let currentNetRx = 0;
+  let currentNetTx = 0;
+  let currentBlockRead = 0;
+  let currentBlockWrite = 0;
   let onlineCpus = 1;
 
   if (stats) {
@@ -130,68 +136,129 @@ export function StatsTab({ containerId, isRunning }: { containerId: string, isRu
   }
 
   return (
-    <div className="flex flex-col h-full w-full min-h-0 overflow-hidden relative rounded-b-md border-t border-border/50 bg-muted/5">
-      <div className="flex items-center justify-between p-6 pb-2">
-        <div>
-          <h3 className="font-semibold text-lg flex items-center gap-2">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            Live Container Analytics
-          </h3>
-          <p className="text-xs text-muted-foreground mt-1">Polling interval: 5 seconds</p>
+    <div className="flex flex-col h-full w-full min-h-0 overflow-hidden rounded-xl border border-border/70 bg-card/40 backdrop-blur-xs">
+      <div className="flex items-center justify-between p-4 pb-2 border-b border-border/40">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <div>
+            <h3 className="font-semibold text-sm text-foreground">
+              Container Telemetry & Hardware Gauges
+            </h3>
+            <p className="text-[11px] text-muted-foreground">Streaming sampled every 4 seconds</p>
+          </div>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchStats} disabled={loading}>
-          <ArrowsClockwiseIcon className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchStats}
+          disabled={loading}
+          className="h-8 gap-1.5 text-xs rounded-lg"
+        >
+          <ArrowsClockwiseIcon className={`h-3.5 w-3.5 ${loading ? "animate-spin text-primary" : ""}`} />
+          <span>Refresh</span>
         </Button>
       </div>
-      
-      <ScrollArea className="flex-1 w-full h-full p-6 pt-4">
-        {/* Current Stats Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card className="shadow-none border-border/50 bg-background/50">
-            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">CPU Usage</CardTitle>
-              <CpuIcon className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{currentCpuPerc.toFixed(2)}%</div>
-              <p className="text-xs text-muted-foreground mt-1">{onlineCpus} cores allocated</p>
+
+      <ScrollArea className="flex-1 w-full p-4">
+        {/* Metric Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          {/* CPU Card */}
+          <Card className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm shadow-xs">
+            <CardContent className="p-3.5 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  CPU
+                </span>
+                <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                  <CpuIcon className="h-4 w-4" weight="fill" />
+                </div>
+              </div>
+              <div className="text-xl font-bold font-mono tracking-tight text-foreground">
+                {currentCpuPerc.toFixed(1)}%
+              </div>
+              <p className="text-[11px] text-muted-foreground">{onlineCpus} core(s) allocated</p>
+              <div className="w-full bg-muted/60 h-1 rounded-full overflow-hidden">
+                <div
+                  className="bg-blue-500 h-full transition-all duration-300"
+                  style={{ width: `${Math.min(100, currentCpuPerc)}%` }}
+                />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-none border-border/50 bg-background/50">
-            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Memory</CardTitle>
-              <MemoryIcon className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{currentMemUsage}</div>
-              <p className="text-xs text-muted-foreground mt-1">{currentMemPerc.toFixed(1)}% of {currentMemLimit}</p>
+          {/* Memory Card */}
+          <Card className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm shadow-xs">
+            <CardContent className="p-3.5 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Memory
+                </span>
+                <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <HardDriveIcon className="h-4 w-4" weight="fill" />
+                </div>
+              </div>
+              <div className="text-xl font-bold font-mono tracking-tight text-foreground truncate">
+                {currentMemUsage}
+              </div>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {currentMemPerc.toFixed(1)}% of {currentMemLimit}
+              </p>
+              <div className="w-full bg-muted/60 h-1 rounded-full overflow-hidden">
+                <div
+                  className="bg-emerald-500 h-full transition-all duration-300"
+                  style={{ width: `${Math.min(100, currentMemPerc)}%` }}
+                />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-none border-border/50 bg-background/50">
-            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Network (RX / TX)</CardTitle>
-              <GlobeIcon className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl font-bold truncate">{formatBytes(currentNetRx)} <span className="text-sm font-normal text-muted-foreground">/ {formatBytes(currentNetTx)}</span></div>
-              <p className="text-xs text-muted-foreground mt-1">Total transferred</p>
+          {/* Network Card */}
+          <Card className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm shadow-xs">
+            <CardContent className="p-3.5 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Network (RX/TX)
+                </span>
+                <div className="p-1.5 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                  <GlobeIcon className="h-4 w-4" weight="fill" />
+                </div>
+              </div>
+              <div className="text-lg font-bold font-mono tracking-tight text-foreground truncate">
+                {formatBytes(currentNetRx)}
+              </div>
+              <p className="text-[11px] font-mono text-muted-foreground truncate">
+                TX: {formatBytes(currentNetTx)}
+              </p>
+              <div className="w-full bg-violet-500/20 h-1 rounded-full overflow-hidden">
+                <div className="bg-violet-500 h-full w-2/3" />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-none border-border/50 bg-background/50">
-            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Block I/O</CardTitle>
-              <HardDrivesIcon className="h-4 w-4 text-amber-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl font-bold truncate">{formatBytes(currentBlockRead)} <span className="text-sm font-normal text-muted-foreground">/ {formatBytes(currentBlockWrite)}</span></div>
-              <p className="text-xs text-muted-foreground mt-1">Total read / write</p>
+          {/* Block I/O Card */}
+          <Card className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm shadow-xs">
+            <CardContent className="p-3.5 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Block Storage
+                </span>
+                <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <HardDrivesIcon className="h-4 w-4" weight="fill" />
+                </div>
+              </div>
+              <div className="text-lg font-bold font-mono tracking-tight text-foreground truncate">
+                {formatBytes(currentBlockRead)}
+              </div>
+              <p className="text-[11px] font-mono text-muted-foreground truncate">
+                Write: {formatBytes(currentBlockWrite)}
+              </p>
+              <div className="w-full bg-amber-500/20 h-1 rounded-full overflow-hidden">
+                <div className="bg-amber-500 h-full w-1/2" />
+              </div>
             </CardContent>
           </Card>
         </div>

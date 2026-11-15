@@ -66,15 +66,15 @@ export function AppSettings() {
   return (
     <div className="max-w-4xl space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">App Settings</h2>
-        <p className="text-muted-foreground">Configure your DockHost preferences.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">App Settings</h2>
+        <p className="text-sm text-muted-foreground mt-0.5">Configure your Docker Lite desktop preferences and system integration.</p>
       </div>
 
       <div className="grid gap-6">
-        <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm shadow-xs">
           <div className="p-6 pb-4 border-b border-border/50">
             <h3 className="font-semibold leading-none tracking-tight">Appearance</h3>
-            <p className="text-sm text-muted-foreground mt-1.5">Customize the look and feel of the application.</p>
+            <p className="text-sm text-muted-foreground mt-1.5">Customize the visual theme and presentation.</p>
           </div>
           <div className="p-6">
             <div className="flex items-center justify-between">
@@ -84,7 +84,7 @@ export function AppSettings() {
                 </div>
                 <div>
                   <Label className="text-base font-medium">Dark Mode</Label>
-                  <p className="text-sm text-muted-foreground">Switch between light and dark themes.</p>
+                  <p className="text-sm text-muted-foreground">Switch between light and dark color schemes.</p>
                 </div>
               </div>
               <Switch
@@ -95,10 +95,10 @@ export function AppSettings() {
           </div>
         </div>
 
-        <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm shadow-xs">
           <div className="p-6 pb-4 border-b border-border/50">
             <h3 className="font-semibold leading-none tracking-tight">Behavior</h3>
-            <p className="text-sm text-muted-foreground mt-1.5">Manage how DockHost interacts with your system.</p>
+            <p className="text-sm text-muted-foreground mt-1.5">Manage how Docker Lite interacts with your local daemon.</p>
           </div>
           <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
@@ -118,10 +118,10 @@ export function AppSettings() {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm shadow-xs">
           <div className="p-6 pb-4 border-b border-border/50">
             <h3 className="font-semibold leading-none tracking-tight">Disk Space & Cleanup</h3>
-            <p className="text-sm text-muted-foreground mt-1.5">Free up space by removing unused Docker data.</p>
+            <p className="text-sm text-muted-foreground mt-1.5">Free up storage by pruning unused Docker cache.</p>
           </div>
           <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
@@ -131,7 +131,7 @@ export function AppSettings() {
                 </div>
                 <div>
                   <Label className="text-base font-medium">System Prune</Label>
-                  <p className="text-sm text-muted-foreground">Remove all unused containers, networks, images, and volumes.</p>
+                  <p className="text-sm text-muted-foreground">Remove all unused containers, networks, images, and build layers.</p>
                 </div>
               </div>
               <Button variant="destructive" onClick={() => setPruneDialogOpen(true)} disabled={isPruning}>
@@ -141,7 +141,7 @@ export function AppSettings() {
           </div>
         </div>
 
-        <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm shadow-xs">
           <div className="p-6 pb-4 border-b border-border/50">
             <h3 className="font-semibold leading-none tracking-tight">System Integrations</h3>
             <p className="text-sm text-muted-foreground mt-1.5">OS-level integrations and startup behavior.</p>
@@ -154,7 +154,7 @@ export function AppSettings() {
                 </div>
                 <div>
                   <Label className="text-base font-medium">Launch on Startup</Label>
-                  <p className="text-sm text-muted-foreground">Automatically start DockHost when you sign in.</p>
+                  <p className="text-sm text-muted-foreground">Automatically start Docker Lite when you sign in.</p>
                 </div>
               </div>
               <Switch

@@ -28,6 +28,7 @@ import {
   ArrowClockwiseIcon,
   TrashIcon,
   KeyIcon,
+  CopyIcon,
 } from "@phosphor-icons/react";
 
 import { LogsTab } from "./details-tabs/LogsTab";
@@ -67,7 +68,12 @@ export function ContainerDetails() {
   }, [id]);
 
   if (loading || !inspectData) {
-    return <div className="p-8 flex justify-center text-muted-foreground animate-pulse">Loading container details...</div>;
+    return (
+      <div className="p-12 flex flex-col items-center justify-center gap-3 text-muted-foreground animate-pulse">
+        <CubeIcon className="w-8 h-8 text-primary animate-spin" />
+        <span className="text-sm font-medium">Loading container inspector...</span>
+      </div>
+    );
   }
 
   const isRunning = inspectData.State?.Running;
@@ -95,75 +101,150 @@ export function ContainerDetails() {
   };
 
   const tabs = [
-    { id: "logs", label: "Logs", icon: FileTextIcon },
+    { id: "logs", label: "Live Logs", icon: FileTextIcon },
     { id: "env", label: "Environment", icon: KeyIcon },
-    { id: "inspect", label: "Inspect", icon: MagnifyingGlassIcon },
-    { id: "binds", label: "Bind mounts", icon: HardDrivesIcon },
-    { id: "exec", label: "Exec", icon: TerminalWindowIcon },
-    { id: "files", label: "Files", icon: FolderOpenIcon },
-    { id: "stats", label: "Stats", icon: ChartLineUpIcon },
+    { id: "stats", label: "Telemetry & Stats", icon: ChartLineUpIcon },
+    { id: "files", label: "Filesystem", icon: FolderOpenIcon },
+    { id: "exec", label: "Terminal Exec", icon: TerminalWindowIcon },
+    { id: "binds", label: "Mounts & Volumes", icon: HardDrivesIcon },
+    { id: "inspect", label: "Raw JSON", icon: MagnifyingGlassIcon },
   ];
 
   return (
     <div className="flex flex-col h-[calc(100vh-80px)] space-y-4">
-      {/* Header Info */}
-      <div className="flex items-center justify-between border-b pb-4 px-2">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/containers")}>
+      {/* Elevated Header Card */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border/80 bg-card/60 backdrop-blur-sm shadow-xs">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/containers")}
+            className="h-9 w-9 rounded-lg hover:bg-muted"
+            title="Back to containers"
+          >
             <CaretLeftIcon className="h-5 w-5" />
           </Button>
-          <div className="bg-primary/20 p-2 rounded-md">
-            <CubeIcon className="h-6 w-6 text-primary" weight="fill" />
+
+          <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
+            <CubeIcon className="h-6 w-6" weight="fill" />
           </div>
-          <div>
-            <h2 className="text-xl font-bold tracking-tight">{name}</h2>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-              <span>{shortId}</span>
-              <span>{image}</span>
+
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold tracking-tight text-foreground">
+                {name}
+              </h2>
+              <span
+                className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border ${
+                  isRunning
+                    ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                    : isPaused
+                    ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                    : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isRunning
+                      ? "bg-emerald-500 animate-pulse"
+                      : isPaused
+                      ? "bg-amber-500"
+                      : "bg-zinc-400"
+                  }`}
+                />
+                <span className="capitalize">{isRunning ? "Running" : isPaused ? "Paused" : "Exited"}</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(shortId || "");
+                  toast.success("Container ID copied");
+                }}
+                className="hover:text-foreground hover:underline flex items-center gap-1"
+                title="Copy container ID"
+              >
+                <span>{shortId}</span>
+                <CopyIcon className="w-3 h-3 opacity-60" />
+              </button>
+              <span>•</span>
+              <span className="bg-muted/70 px-1.5 py-0.2 rounded border border-border/50 text-[11px] truncate max-w-[200px]">
+                {image}
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          <div className="flex flex-col items-end mr-4">
-            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Status</span>
-            <span className="text-sm font-medium flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${isRunning ? "bg-green-500" : isPaused ? "bg-yellow-500" : "bg-gray-500"}`}></span>
-              {isRunning ? "Running" : isPaused ? "Paused" : "Exited"}
-            </span>
-          </div>
-
+        {/* Action Controls Toolbar */}
+        <div className="flex items-center gap-1.5 bg-muted/40 p-1 rounded-xl border border-border/60 self-start sm:self-auto">
           {isRunning ? (
-            <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive" onClick={() => runAction("stop_container")} title="Stop">
-              <SquareIcon className="h-4 w-4 fill-current" />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2.5 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5"
+              onClick={() => runAction("stop_container")}
+              title="Stop container"
+            >
+              <SquareIcon className="h-3.5 w-3.5 fill-current" />
+              <span className="hidden sm:inline">Stop</span>
             </Button>
           ) : (
-            <Button size="icon" variant="ghost" className="text-green-500" onClick={() => runAction("start_container")} title="Start">
-              <PlayIcon className="h-4 w-4 fill-current" />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2.5 text-xs text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-1.5"
+              onClick={() => runAction("start_container")}
+              title="Start container"
+            >
+              <PlayIcon className="h-3.5 w-3.5 fill-current" />
+              <span className="hidden sm:inline">Start</span>
             </Button>
           )}
 
           {isRunning && (
-            <Button size="icon" variant="ghost" className="text-muted-foreground" onClick={() => runAction("pause_container")} title="PauseIcon">
-              <PauseIcon className="h-4 w-4 fill-current" />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted gap-1.5"
+              onClick={() => runAction("pause_container")}
+              title="Pause container"
+            >
+              <PauseIcon className="h-3.5 w-3.5 fill-current" />
+              <span className="hidden sm:inline">Pause</span>
             </Button>
           )}
 
           {isPaused && (
-            <Button size="icon" variant="ghost" className="text-muted-foreground" onClick={() => runAction("unpause_container")} title="Unpause">
-              <PlayIcon className="h-4 w-4 fill-current" />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted gap-1.5"
+              onClick={() => runAction("unpause_container")}
+              title="Unpause container"
+            >
+              <PlayIcon className="h-3.5 w-3.5 fill-current" />
+              <span className="hidden sm:inline">Resume</span>
             </Button>
           )}
 
-          <Button size="icon" variant="ghost" className="text-muted-foreground" onClick={() => runAction("restart_container")} title="Restart">
-            <ArrowClockwiseIcon className="h-4 w-4" />
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted gap-1.5"
+            onClick={() => runAction("restart_container")}
+            title="Restart container"
+          >
+            <ArrowClockwiseIcon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Restart</span>
           </Button>
 
           {isRunning && (
             <Button
-              size="icon"
+              size="sm"
               variant="ghost"
-              className="text-muted-foreground hover:text-foreground"
+              className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted gap-1.5"
               onClick={async () => {
                 try {
                   await invoke("open_container_terminal", { id });
@@ -172,61 +253,77 @@ export function ContainerDetails() {
                   toast.error(`Failed to open terminal: ${e}`);
                 }
               }}
-              title="Open Shell in Terminal"
+              title="Open host shell connected to container"
             >
-              <TerminalWindowIcon className="h-4 w-4" />
+              <TerminalWindowIcon className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Terminal</span>
             </Button>
           )}
 
-          <Button size="icon" variant="ghost" className="text-muted-foreground hover:text-red-500 ml-2" onClick={() => setShowDeleteDialog(true)} title="Delete">
-            <TrashIcon className="h-4 w-4" />
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            onClick={() => setShowDeleteDialog(true)}
+            title="Delete container"
+          >
+            <TrashIcon className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
 
-      {/* Tabs Naivgation */}
-      <div className="flex items-center gap-6 border-b border-border/50 text-sm font-medium px-2">
+      {/* Tabs Navigation */}
+      <div className="flex items-center gap-1.5 p-1 bg-muted/40 backdrop-blur-xs rounded-xl border border-border/70 overflow-x-auto max-w-full">
         {tabs.map((tab) => {
           const isActive = defaultTab === tab.id;
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setSearchParams({ tab: tab.id })}
-              className={`pb-3 border-b-2 transition-colors flex items-center gap-2 ${isActive ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+                isActive
+                  ? "bg-background text-foreground shadow-xs border border-border/60 font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              }`}
             >
-              {tab.label}
+              <tab.icon
+                className={`h-3.5 w-3.5 ${isActive ? "text-primary" : "text-muted-foreground"}`}
+                weight={isActive ? "fill" : "regular"}
+              />
+              <span>{tab.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 min-h-0 border rounded-md overflow-hidden bg-background">
-        {defaultTab === "logs" && <LogsTab containerId={id as string} />}
+      {/* Tab Panels */}
+      <div className="flex-1 overflow-hidden">
+        {defaultTab === "logs" && <LogsTab containerId={id!} />}
         {defaultTab === "env" && <EnvTab envList={inspectData?.Config?.Env || []} />}
-        {defaultTab === "inspect" && <InspectTab inspectData={inspectData} />}
+        {defaultTab === "stats" && <StatsTab containerId={id!} isRunning={isRunning} />}
+        {defaultTab === "files" && <FilesTab containerId={id!} isRunning={isRunning} />}
+        {defaultTab === "exec" && <ExecTab containerId={id!} isRunning={isRunning} />}
         {defaultTab === "binds" && <BindMountsTab mounts={inspectData?.Mounts || []} />}
-        {defaultTab === "exec" && <ExecTab containerId={id as string} isRunning={isRunning} />}
-        {defaultTab === "files" && <FilesTab containerId={id as string} isRunning={isRunning} />}
-        {defaultTab === "stats" && <StatsTab containerId={id as string} isRunning={isRunning} />}
+        {defaultTab === "inspect" && <InspectTab inspectData={inspectData} />}
       </div>
 
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-xl border border-border shadow-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Container {name}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the container. This action cannot be undone.
+              This will permanently remove the container. Any container-internal data not mounted to a persistent volume will be lost.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               onClick={() => runAction("remove_container")}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              Delete Container
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

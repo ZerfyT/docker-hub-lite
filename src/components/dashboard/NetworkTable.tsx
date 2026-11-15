@@ -101,30 +101,44 @@ export function NetworkTable({ networks, onRefresh, selected = [], onSelectedCha
   const someSelected = selected.length > 0 && selected.length < selectableCount;
 
   return (
-    <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden text-sm">
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label="Networks list"
+      className="rounded-xl border border-border/80 bg-card/60 backdrop-blur-sm shadow-xs overflow-x-auto text-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
+    >
       <Table>
-        <TableHeader className="bg-muted/40">
-          <TableRow>
-            <TableHead className="w-[40px] text-center pl-4">
+        <TableHeader className="bg-muted/50 backdrop-blur-xs sticky top-0 z-10">
+          <TableRow className="border-border/60 hover:bg-transparent">
+            <TableHead className="w-[44px] text-center pl-4">
               <Checkbox
                 checked={allSelected ? true : someSelected ? "indeterminate" : false}
                 onCheckedChange={toggleAll}
                 disabled={selectableCount === 0}
+                aria-label="Select all custom networks"
               />
             </TableHead>
-            <TableHead className="font-semibold">Name</TableHead>
-            <TableHead className="font-semibold">Subnet</TableHead>
-            <TableHead className="font-semibold">Driver</TableHead>
-            <TableHead className="font-semibold">Scope</TableHead>
-            <TableHead className="font-semibold">Attachable</TableHead>
-            <TableHead className="text-right font-semibold pr-4">Actions</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[180px]">Name</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[140px]">Subnet & Gateway</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[100px]">Driver</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[100px]">Scope</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[100px]">Attachable</TableHead>
+            <TableHead className="text-right font-semibold text-foreground pr-4 min-w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {networks.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                No networks found.
+              <TableCell colSpan={7} className="py-12 text-center">
+                <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
+                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground border border-border/60">
+                    <NetworkIcon className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">No networks found</p>
+                  <p className="text-xs text-muted-foreground">
+                    Create custom bridge networks to isolate containers.
+                  </p>
+                </div>
               </TableCell>
             </TableRow>
           ) : (

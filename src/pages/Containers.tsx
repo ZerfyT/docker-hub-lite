@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ContainerTable } from "@/components/dashboard/ContainerTable";
-import { InfoIcon, PlayIcon, SquareIcon, PauseIcon } from "@phosphor-icons/react";
+import { PlayIcon, SquareIcon, PauseIcon } from "@phosphor-icons/react";
 import { TableActionsBar } from "@/components/dashboard/TableActionsBar";
 import { useStore } from "@/store/useStore";
 import { Switch } from "@/components/ui/switch";
@@ -120,34 +120,73 @@ export function Containers() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-16 mb-4 mt-2">
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold flex items-center gap-1.5">
-            Containers <InfoIcon className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <span className="text-primary font-medium text-sm mt-1 flex gap-2 items-center">
-            {containers.length} Total
-            <span className="text-muted-foreground">/</span>
-            <span className="text-green-500">{containers.filter(c => c.State === "running").length} Running</span>
-            <span className="text-muted-foreground">/</span>
-            <span className="text-neutral-500">{containers.filter(c => c.State !== "running").length} Stopped</span>
-          </span>
+      {/* Modern Telemetry Banner */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        {/* Container Status Card */}
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>Container Fleet</span>
+            <span className="font-mono text-foreground font-bold">{containers.length} Total</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs font-mono">
+            <span className="inline-flex items-center gap-1.5 text-emerald-500 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {containers.filter(c => c.State === "running").length} Running
+            </span>
+            <span className="text-muted-foreground/40">•</span>
+            <span className="text-muted-foreground">
+              {containers.filter(c => c.State !== "running").length} Stopped
+            </span>
+          </div>
+          <div className="w-full bg-muted/60 h-1.5 rounded-full overflow-hidden flex">
+            <div
+              className="bg-emerald-500 h-full transition-all duration-300"
+              style={{
+                width: containers.length > 0
+                  ? `${(containers.filter(c => c.State === "running").length / containers.length) * 100}%`
+                  : "0%"
+              }}
+            />
+            <div className="bg-muted-foreground/30 h-full flex-1" />
+          </div>
         </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold flex items-center gap-1.5">
-            CPU usage <InfoIcon className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <span className="text-primary font-medium text-sm mt-1 flex gap-1">
-            {totalCPU.toFixed(2)}% <span className="text-muted-foreground">/ {(cpuCores * 100).toFixed(0)}% <span className="text-[13px]">({cpuCores} CPUs available)</span></span>
-          </span>
+
+        {/* CPU Usage Card */}
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>Aggregated CPU Load</span>
+            <span className="font-mono text-primary font-bold">{totalCPU.toFixed(1)}%</span>
+          </div>
+          <div className="text-xs text-muted-foreground font-mono truncate">
+            {cpuCores > 0 ? `${cpuCores} CPU Core(s) Available` : "Detecting CPUs..."}
+          </div>
+          <div className="w-full bg-muted/60 h-1.5 rounded-full overflow-hidden">
+            <div
+              className="bg-primary h-full transition-all duration-300"
+              style={{
+                width: `${Math.min(100, (totalCPU / Math.max(1, cpuCores * 100)) * 100)}%`
+              }}
+            />
+          </div>
         </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold flex items-center gap-1.5">
-            Memory usage <InfoIcon className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <span className="text-primary font-medium text-sm mt-1 flex gap-1">
-            {formatBytes(totalMem)} <span className="text-muted-foreground">/ {formatBytes(memLimit)}</span>
-          </span>
+
+        {/* Memory Usage Card */}
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>Container Memory</span>
+            <span className="font-mono text-foreground font-bold">{formatBytes(totalMem)}</span>
+          </div>
+          <div className="text-xs text-muted-foreground font-mono truncate">
+            Limit: {formatBytes(memLimit)}
+          </div>
+          <div className="w-full bg-muted/60 h-1.5 rounded-full overflow-hidden">
+            <div
+              className="bg-emerald-500 h-full transition-all duration-300"
+              style={{
+                width: memLimit > 0 ? `${Math.min(100, (totalMem / memLimit) * 100)}%` : "0%"
+              }}
+            />
+          </div>
         </div>
       </div>
 

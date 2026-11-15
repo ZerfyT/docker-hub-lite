@@ -11,8 +11,12 @@ import {
   CheckCircleIcon,
   SpinnerGapIcon,
   SlidersHorizontalIcon,
+  StackIcon,
+  HardDrivesIcon,
+  ArrowSquareOutIcon,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { RunContainerModal } from "@/components/modals/RunContainerModal";
 
 interface DevStarter {
@@ -114,6 +118,7 @@ const STARTERS: DevStarter[] = [
 ];
 
 export function DevStarters() {
+  const navigate = useNavigate();
   const { containers, fetchContainers, fetchImages } = useStore();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [launchingId, setLaunchingId] = useState<string | null>(null);
@@ -125,8 +130,8 @@ export function DevStarters() {
     return s.category === selectedCategory;
   });
 
-  const isStarterRunning = (starter: DevStarter) => {
-    return containers.some(
+  const getRunningContainer = (starter: DevStarter) => {
+    return containers.find(
       (c) =>
         c.State === "running" &&
         (c.Names?.[0]?.includes(starter.defaultName) || c.Image?.includes(starter.image.split(":")[0]))
@@ -138,14 +143,12 @@ export function DevStarters() {
     toast.loading(`Launching ${starter.name}...`, { id: `starter-${starter.id}` });
 
     try {
-      // 1. Pull image if not already cached
       try {
         await invoke("pull_image", { image: starter.image });
       } catch (err) {
         console.warn("Pull image warning (might already exist):", err);
       }
 
-      // 2. Create and start container
       await invoke("create_and_start_container", {
         args: {
           name: starter.defaultName,
@@ -170,60 +173,95 @@ export function DevStarters() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <RocketLaunchIcon className="h-6 w-6 text-primary" />
-          Dev Starters
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          Instantly spin up isolated databases, message brokers, and development tools with single-click configurations.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-foreground">
+            <RocketLaunchIcon className="h-6 w-6 text-primary" weight="fill" />
+            Developer Starters Studio
+          </h2>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            1-Click instant provisioning for isolated databases, caches, message brokers, and developer tooling.
+          </p>
+        </div>
+
+        <Badge variant="outline" className="font-mono text-xs px-2.5 py-1 w-fit border-border/70">
+          {STARTERS.length} curated templates
+        </Badge>
       </div>
 
       {/* Category filters */}
-      <div className="flex items-center gap-2 border-b border-border pb-3">
+      <div className="flex items-center gap-1.5 p-1 bg-muted/40 backdrop-blur-xs rounded-xl border border-border/70 w-fit overflow-x-auto max-w-full">
         {[
-          { id: "all", label: "All Services" },
-          { id: "database", label: "Databases" },
-          { id: "cache", label: "Caches" },
-          { id: "queue", label: "Queues" },
-          { id: "tool", label: "Web & Testing" },
+          { id: "all", label: "All Templates", count: STARTERS.length },
+          { id: "database", label: "Databases", count: STARTERS.filter(s => s.category === "database").length },
+          { id: "cache", label: "Caches", count: STARTERS.filter(s => s.category === "cache").length },
+          { id: "queue", label: "Queues", count: STARTERS.filter(s => s.category === "queue").length },
+          { id: "tool", label: "Web & Testing", count: STARTERS.filter(s => s.category === "tool").length },
         ].map((cat) => (
-          <Button
+          <button
             key={cat.id}
-            variant={selectedCategory === cat.id ? "default" : "ghost"}
-            size="sm"
+            type="button"
             onClick={() => setSelectedCategory(cat.id)}
-            className="text-xs h-8"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              selectedCategory === cat.id
+                ? "bg-background text-foreground shadow-xs border border-border/60 font-semibold"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            }`}
           >
-            {cat.label}
-          </Button>
+            <span>{cat.label}</span>
+            <span className="text-[10px] opacity-70 font-mono">({cat.count})</span>
+          </button>
         ))}
       </div>
 
       {/* Grid of Starters */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredStarters.map((starter) => {
-          const running = isStarterRunning(starter);
+          const runningContainer = getRunningContainer(starter);
           const isBusy = launchingId === starter.id;
 
           return (
-            <Card key={starter.id} className="flex flex-col justify-between border-border/60 shadow-sm bg-card hover:border-primary/40 transition-colors">
+            <Card
+              key={starter.id}
+              className={`flex flex-col justify-between border rounded-xl shadow-xs bg-card/60 backdrop-blur-sm transition-all duration-200 hover:shadow-md ${
+                runningContainer
+                  ? "border-emerald-500/40 hover:border-emerald-500/60"
+                  : "border-border/70 hover:border-primary/40"
+              }`}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                      <DatabaseIcon className="h-5 w-5" />
+                    <div className="p-2.5 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
+                      {starter.category === "database" ? (
+                        <DatabaseIcon className="h-5 w-5" weight="fill" />
+                      ) : starter.category === "cache" ? (
+                        <HardDrivesIcon className="h-5 w-5" weight="fill" />
+                      ) : (
+                        <StackIcon className="h-5 w-5" weight="fill" />
+                      )}
                     </div>
                     <div>
-                      <CardTitle className="text-base font-semibold">{starter.name}</CardTitle>
-                      <span className="text-[11px] font-mono text-muted-foreground">{starter.image}</span>
+                      <CardTitle className="text-base font-semibold text-foreground">
+                        {starter.name}
+                      </CardTitle>
+                      <span className="text-[11px] font-mono text-muted-foreground">
+                        {starter.image}
+                      </span>
                     </div>
                   </div>
-                  {running && (
-                    <Badge variant="default" className="bg-green-500/10 text-green-500 border-0 flex items-center gap-1 text-[10px]">
-                      <CheckCircleIcon className="h-3 w-3" /> Running
-                    </Badge>
+
+                  {runningContainer && (
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/containers/${runningContainer.Id}`)}
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20 transition-colors"
+                      title="View running container details"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Active</span>
+                      <ArrowSquareOutIcon className="w-3 h-3 opacity-70" />
+                    </button>
                   )}
                 </div>
                 <CardDescription className="text-xs text-muted-foreground mt-2 line-clamp-2">
@@ -234,9 +272,12 @@ export function DevStarters() {
               <CardContent className="space-y-3 pb-3">
                 {/* Port badge readout */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-[11px] font-medium text-muted-foreground">Ports:</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">Port(s):</span>
                   {starter.ports.map((p, i) => (
-                    <span key={i} className="font-mono text-[11px] bg-muted/60 px-1.5 py-0.5 rounded-md border border-border/40 text-foreground">
+                    <span
+                      key={i}
+                      className="font-mono text-[11px] bg-muted/60 px-1.5 py-0.5 rounded-md border border-border/50 text-foreground"
+                    >
                       {p.host_port}:{p.container_port}
                     </span>
                   ))}
@@ -245,14 +286,18 @@ export function DevStarters() {
                 {/* Tags */}
                 <div className="flex flex-wrap gap-1">
                   {starter.tags.map((t) => (
-                    <span key={t} className="text-[10px] bg-secondary/50 text-secondary-foreground px-2 py-0.5 rounded-full">
+                    <Badge
+                      key={t}
+                      variant="secondary"
+                      className="text-[10px] font-normal px-2 py-0.2 border-border/40"
+                    >
                       {t}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               </CardContent>
 
-              <CardFooter className="pt-2 border-t border-border/40 flex items-center justify-between gap-2">
+              <CardFooter className="pt-2 border-t border-border/50 flex items-center justify-between gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -264,24 +309,29 @@ export function DevStarters() {
                   disabled={isBusy}
                 >
                   <SlidersHorizontalIcon className="h-3.5 w-3.5" />
-                  Customize...
+                  Customize
                 </Button>
 
                 <Button
                   size="sm"
-                  className="text-xs h-8 gap-1.5"
+                  className="text-xs h-8 gap-1.5 bg-primary text-primary-foreground font-medium"
                   onClick={() => handleQuickLaunch(starter)}
-                  disabled={isBusy || running}
+                  disabled={isBusy}
                 >
                   {isBusy ? (
                     <>
-                      <SpinnerGapIcon className="h-3.5 w-3.5 animate-spin" /> Launching...
+                      <SpinnerGapIcon className="h-3.5 w-3.5 animate-spin" />
+                      Starting...
                     </>
-                  ) : running ? (
-                    "Active"
+                  ) : runningContainer ? (
+                    <>
+                      <CheckCircleIcon className="h-3.5 w-3.5 text-emerald-300" weight="fill" />
+                      Relaunch
+                    </>
                   ) : (
                     <>
-                      <PlayIcon className="h-3.5 w-3.5 fill-current" /> 1-Click Launch
+                      <PlayIcon className="h-3.5 w-3.5 fill-current" />
+                      Quick Launch
                     </>
                   )}
                 </Button>

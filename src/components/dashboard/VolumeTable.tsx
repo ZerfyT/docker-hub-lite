@@ -110,29 +110,40 @@ export function VolumeTable({ volumes, onRefresh, selected = [], onSelectedChang
   const someSelected = selected.length > 0 && selected.length < volumes.length;
 
   return (
-    <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden text-sm">
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label="Volumes list"
+      className="rounded-xl border border-border/80 bg-card/60 backdrop-blur-sm shadow-xs overflow-x-auto text-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
+    >
       <Table>
-        <TableHeader className="bg-muted/40">
-          <TableRow>
+        <TableHeader className="bg-muted/50 backdrop-blur-xs sticky top-0 z-10">
+          <TableRow className="border-border/60 hover:bg-transparent">
             <TableHead className="w-10 text-center pl-4">
               <Checkbox
                 checked={allSelected ? true : someSelected ? "indeterminate" : false}
                 onCheckedChange={toggleAll}
+                aria-label="Select all volumes"
               />
             </TableHead>
-            <TableHead className="font-semibold">Name</TableHead>
-            <TableHead className="font-semibold w-30">Size</TableHead>
-            <TableHead className="font-semibold w-25">Status</TableHead>
-            <TableHead className="font-semibold">Driver</TableHead>
-            <TableHead className="font-semibold">Mountpoint</TableHead>
-            <TableHead className="text-right font-semibold pr-4">Actions</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[180px]">Name</TableHead>
+            <TableHead className="font-semibold text-foreground w-30">Size</TableHead>
+            <TableHead className="font-semibold text-foreground w-25">Status</TableHead>
+            <TableHead className="font-semibold text-foreground">Driver</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[200px]">Mountpoint</TableHead>
+            <TableHead className="text-right font-semibold text-foreground pr-4 min-w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {volumes.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                No volumes found.
+              <TableCell colSpan={7} className="py-12 text-center">
+                <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
+                  <p className="text-sm font-semibold text-foreground">No volumes found</p>
+                  <p className="text-xs text-muted-foreground">
+                    Create a persistent volume for databases or containers.
+                  </p>
+                </div>
               </TableCell>
             </TableRow>
           ) : (

@@ -306,7 +306,7 @@ export function PullImageModal({ open, onOpenChange }: PullImageModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !isPulling && onOpenChange(v)}>
-      <DialogContent className="sm:max-w-[540px] max-h-[88vh] flex flex-col p-6 gap-0">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-6 gap-0">
         <form onSubmit={handlePull} className="flex flex-col flex-1 overflow-hidden">
           <DialogHeader className="pb-4">
             <DialogTitle className="flex items-center gap-2">
@@ -386,11 +386,10 @@ export function PullImageModal({ open, onOpenChange }: PullImageModalProps) {
                       type="button"
                       onClick={() => handleSelectImageSuggestion(item.name)}
                       onMouseEnter={() => setHighlightedIndex(idx)}
-                      className={`w-full text-left px-3 py-2 flex flex-col gap-0.5 transition-colors border-b border-border/30 last:border-0 ${
-                        highlightedIndex === idx
-                          ? "bg-primary/15 text-foreground"
-                          : "hover:bg-muted/60 text-foreground"
-                      }`}
+                      className={`w-full text-left px-3 py-2 flex flex-col gap-0.5 transition-colors border-b border-border/30 last:border-0 ${highlightedIndex === idx
+                        ? "bg-primary/15 text-foreground"
+                        : "hover:bg-muted/60 text-foreground"
+                        }`}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5 font-mono text-xs font-semibold">
@@ -446,18 +445,16 @@ export function PullImageModal({ open, onOpenChange }: PullImageModalProps) {
                             key={tag.name}
                             type="button"
                             onClick={() => handleSelectTag(tag.name)}
-                            className={`group inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-mono transition-all border ${
-                              isSelected
-                                ? "bg-primary text-primary-foreground border-primary shadow-sm font-semibold"
-                                : "bg-muted/50 hover:bg-muted text-foreground border-border/60 hover:border-primary/50"
-                            }`}
+                            className={`group inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-mono transition-all border ${isSelected
+                              ? "bg-primary text-primary-foreground border-primary shadow-sm font-semibold"
+                              : "bg-muted/50 hover:bg-muted text-foreground border-border/60 hover:border-primary/50"
+                              }`}
                           >
                             <span>{tag.name}</span>
                             {tag.full_size && (
                               <span
-                                className={`text-[10px] inline-flex items-center gap-0.5 opacity-75 font-sans ${
-                                  isSelected ? "text-primary-foreground" : "text-muted-foreground"
-                                }`}
+                                className={`text-[10px] inline-flex items-center gap-0.5 opacity-75 font-sans ${isSelected ? "text-primary-foreground" : "text-muted-foreground"
+                                  }`}
                               >
                                 <HardDriveIcon className="h-2.5 w-2.5" />
                                 {formatBytes(tag.full_size)}
@@ -465,9 +462,8 @@ export function PullImageModal({ open, onOpenChange }: PullImageModalProps) {
                             )}
                             {tag.last_updated && !tag.full_size && (
                               <span
-                                className={`text-[10px] inline-flex items-center gap-0.5 opacity-75 font-sans ${
-                                  isSelected ? "text-primary-foreground" : "text-muted-foreground"
-                                }`}
+                                className={`text-[10px] inline-flex items-center gap-0.5 opacity-75 font-sans ${isSelected ? "text-primary-foreground" : "text-muted-foreground"
+                                  }`}
                               >
                                 <ClockIcon className="h-2.5 w-2.5" />
                                 {formatDate(tag.last_updated)}

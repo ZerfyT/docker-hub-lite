@@ -20,7 +20,7 @@ import { useStore } from "@/store/useStore";
 import { useEffect } from "react";
 
 function App() {
-  const { mode, theme } = useStore();
+  const { mode } = useStore();
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -30,8 +30,12 @@ function App() {
     } else {
       root.classList.remove("dark");
     }
-    root.setAttribute("data-theme", theme || "zinc");
-  }, [mode, theme]);
+
+    const metaColorScheme = document.querySelector('meta[name="color-scheme"]');
+    if (metaColorScheme) {
+      metaColorScheme.setAttribute("content", mode);
+    }
+  }, [mode]);
 
   return (
     <BrowserRouter>

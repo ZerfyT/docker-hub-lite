@@ -49,10 +49,22 @@ export interface VolumeSummary {
   Labels: Record<string, string> | null;
 }
 
+export interface HostStatsPoint {
+  time: string;
+  cpu: number;
+  memory: number;
+}
+
 interface AppState {
   // Global Poll Interval Controller
   isPolling: boolean;
   setIsPolling: (isPolling: boolean) => void;
+
+  // Host Stats History (Persistent across route changes)
+  hostStatsHistory: HostStatsPoint[];
+  latestCpu: number;
+  latestMemory: number;
+  fetchHostStats: () => Promise<void>;
 
   // Docker State
   dockerState: string;
@@ -87,11 +99,9 @@ interface AppState {
   fetchAllData: () => Promise<void>;
   fetchFastData: () => Promise<void>;
 
-  // Color Theme
+  // Color Scheme
   mode: "light" | "dark";
   setMode: (mode: "light" | "dark") => void;
-  theme: string;
-  setTheme: (theme: string) => void;
 
   // Prune
   systemPrune: () => Promise<string>;
@@ -110,16 +120,41 @@ interface AppState {
 export const useStore = create<AppState>((set, get) => ({
   isPolling: true,
   setIsPolling: (isPolling) => set({ isPolling }),
+
+  hostStatsHistory: Array.from({ length: 60 }).map((_, i) => ({
+    time: new Date(Date.now() - (60 - i) * 1000).toLocaleTimeString([], { second: "2-digit" }),
+    cpu: 0,
+    memory: 0,
+  })),
+  latestCpu: 0,
+  latestMemory: 0,
+  fetchHostStats: async () => {
+    try {
+      const stats = await invoke<{ cpu: number; memory: number }>("get_host_stats");
+      const cpuVal = Math.round(stats.cpu);
+      const memVal = Math.round(stats.memory);
+      set((state) => {
+        const next = [...state.hostStatsHistory.slice(1)];
+        next.push({
+          time: new Date().toLocaleTimeString([], { second: "2-digit" }),
+          cpu: cpuVal,
+          memory: memVal,
+        });
+        return {
+          hostStatsHistory: next,
+          latestCpu: cpuVal,
+          latestMemory: memVal,
+        };
+      });
+    } catch (e) {
+      console.error("Failed to fetch host stats in background store:", e);
+    }
+  },
+
   mode: (localStorage.getItem("docker-lite-mode") as "light" | "dark") || "dark",
   setMode: (mode) => {
     localStorage.setItem("docker-lite-mode", mode);
     set({ mode });
-  },
-  theme: localStorage.getItem("docker-lite-theme") || "zinc",
-  setTheme: (theme) => {
-    localStorage.setItem("docker-lite-theme", theme);
-    document.documentElement.setAttribute("data-theme", theme);
-    set({ theme });
   },
 
   dockerState: "Disconnected",

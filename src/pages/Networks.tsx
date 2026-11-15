@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { InfoIcon, PlusIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 import { NetworkTable } from "@/components/dashboard/NetworkTable";
@@ -72,18 +72,32 @@ export function Networks() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-16 mb-4 mt-2">
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold flex items-center gap-1.5">
-            Networks <InfoIcon className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <span className="text-primary font-medium text-sm mt-1 flex gap-2 items-center">
-            {networks.length} Total
-            <span className="text-muted-foreground">/</span>
-            <span className="text-green-500">{customCount} Custom</span>
-            <span className="text-muted-foreground">/</span>
-            <span className="text-neutral-500">{builtinCount} Built-in</span>
-          </span>
+      {/* Modern Telemetry Banner */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>Docker Networks</span>
+            <span className="font-mono text-foreground font-bold">{networks.length} Total</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs font-mono">
+            <span className="text-emerald-500 font-semibold">
+              {customCount} Custom Bridges
+            </span>
+            <span className="text-muted-foreground/40">•</span>
+            <span className="text-muted-foreground">
+              {builtinCount} Default (bridge, host, none)
+            </span>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>Subnet Isolation</span>
+            <span className="font-mono text-foreground font-bold">{customCount} Isolated</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Virtual software-defined bridges enabling inter-container DNS and traffic routing
+          </p>
         </div>
       </div>
 

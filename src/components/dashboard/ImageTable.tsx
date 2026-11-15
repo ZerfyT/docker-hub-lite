@@ -97,29 +97,43 @@ export function ImageTable({ images, onRefresh, selected = [], onSelectedChange,
   const someSelected = selected.length > 0 && selected.length < images.length;
 
   return (
-    <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden text-sm">
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label="Images list"
+      className="rounded-xl border border-border/80 bg-card/60 backdrop-blur-sm shadow-xs overflow-x-auto text-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
+    >
       <Table>
-        <TableHeader className="bg-muted/40">
-          <TableRow>
-            <TableHead className="w-[40px] text-center pl-4">
+        <TableHeader className="bg-muted/50 backdrop-blur-xs sticky top-0 z-10">
+          <TableRow className="border-border/60 hover:bg-transparent">
+            <TableHead className="w-[44px] text-center pl-4">
               <Checkbox
                 checked={allSelected ? true : someSelected ? "indeterminate" : false}
                 onCheckedChange={toggleAll}
+                aria-label="Select all images"
               />
             </TableHead>
-            <TableHead className="font-semibold">Repository & Tag</TableHead>
-            <TableHead className="font-semibold">Image ID</TableHead>
-            <TableHead className="font-semibold">In Use</TableHead>
-            <TableHead className="font-semibold">Created</TableHead>
-            <TableHead className="font-semibold">Size</TableHead>
-            <TableHead className="text-right font-semibold pr-4">Actions</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[200px]">Repository & Tag</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[120px]">Image ID</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[120px]">In Use</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[100px]">Created</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[100px]">Disk Size</TableHead>
+            <TableHead className="text-right font-semibold text-foreground pr-4 min-w-[120px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {images.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                No images found.
+              <TableCell colSpan={7} className="py-12 text-center">
+                <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
+                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground border border-border/60">
+                    <HashIcon className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">No Docker images found</p>
+                  <p className="text-xs text-muted-foreground">
+                    Pull an image from Docker Hub or build an image locally.
+                  </p>
+                </div>
               </TableCell>
             </TableRow>
           ) : (
@@ -127,28 +141,61 @@ export function ImageTable({ images, onRefresh, selected = [], onSelectedChange,
               const primaryTag = img.RepoTags && img.RepoTags.length > 0 ? img.RepoTags[0] : "<none>:<none>";
               const [repo, tag] = primaryTag.split(":");
               const shortId = img.Id.replace("sha256:", "").substring(0, 12);
-              const createdDate = new Date(img.Created * 1000).toLocaleDateString();
+              const createdDate = new Date(img.Created * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
               const isSelected = selected.includes(img.Id);
 
               return (
-                <TableRow key={img.Id} className={`hover:bg-muted/30 transition-colors group cursor-pointer ${isSelected ? "bg-primary/5" : ""}`} onClick={(e) => toggleSelection(e, img.Id)}>
+                <TableRow
+                  key={img.Id}
+                  className={`hover:bg-muted/40 transition-colors group cursor-pointer border-border/50 ${
+                    isSelected ? "bg-primary/8 hover:bg-primary/12" : ""
+                  }`}
+                  onClick={(e) => toggleSelection(e, img.Id)}
+                >
                   <TableCell className="pl-4" onClick={(e) => toggleSelection(e, img.Id)}>
                     <Checkbox checked={isSelected} className="pointer-events-none" />
                   </TableCell>
-                  <TableCell className="font-medium border-l border-transparent">
-                    <div className="flex flex-col">
-                      <span>{repo}</span>
-                      <span className="text-xs text-muted-foreground">{tag}</span>
+                  <TableCell className="font-medium">
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {repo}
+                        </span>
+                        {tag && (
+                          <span className="text-[11px] font-mono px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20">
+                            {tag}
+                          </span>
+                        )}
+                      </div>
+                      {img.RepoTags && img.RepoTags.length > 1 && (
+                        <span className="text-[10px] text-muted-foreground">
+                          +{img.RepoTags.length - 1} more tag(s)
+                        </span>
+                      )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {shortId}
+                  <TableCell className="text-muted-foreground font-mono text-xs">
+                    <span
+                      className="cursor-pointer hover:text-primary transition-colors hover:underline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyId(img.Id);
+                      }}
+                      title="Click to copy image ID"
+                    >
+                      {shortId}
+                    </span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell>
                     {img.Containers > 0 ? (
-                      <span className="text-green-500 font-medium">{img.Containers} Container(s)</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-emerald-500 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        {img.Containers} active
+                      </span>
                     ) : (
-                      <span className="text-neutral-500">Unused</span>
+                      <span className="text-xs text-muted-foreground/60">
+                        Unused
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="text-muted-foreground">

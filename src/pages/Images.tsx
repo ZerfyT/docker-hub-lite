@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { InfoIcon, ArrowDownIcon, PlayIcon } from "@phosphor-icons/react";
+import { ArrowDownIcon, PlayIcon } from "@phosphor-icons/react";
 import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 import { ImageTable } from "@/components/dashboard/ImageTable";
@@ -93,28 +93,38 @@ export function Images() {
         </div>
       </div>
 
-      <div className="flex items-center gap-16 mb-4 mt-2">
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold flex items-center gap-1.5">
-            Images <InfoIcon className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <span className="text-primary font-medium text-sm mt-1 flex gap-2 items-center">
-            {images.length} Total
+      {/* Modern Telemetry Banner */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>Local Image Cache</span>
+            <span className="font-mono text-foreground font-bold">{images.length} Image(s)</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs font-mono">
+            <span className="text-primary font-semibold">
+              {images.filter(img => img.Containers > 0).length} In Use
+            </span>
+            <span className="text-muted-foreground/40">•</span>
+            <span className="text-muted-foreground">
+              {images.filter(img => !img.Containers || img.Containers === 0).length} Standby
+            </span>
             {danglingImagesCount > 0 && (
               <>
-                <span className="text-muted-foreground">/</span>
-                <span className="text-amber-500">{danglingImagesCount} Unused</span>
+                <span className="text-muted-foreground/40">•</span>
+                <span className="text-amber-500 font-semibold">{danglingImagesCount} Dangling</span>
               </>
             )}
-          </span>
+          </div>
         </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold flex items-center gap-1.5">
-            Total disk space <InfoIcon className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <span className="text-primary font-medium text-sm mt-1 flex gap-1">
-            {formatBytes(totalSize)}
-          </span>
+
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>Disk Space Occupied</span>
+            <span className="font-mono text-foreground font-bold">{formatBytes(totalSize)}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Cached container layers stored by Docker Engine
+          </p>
         </div>
       </div>
 

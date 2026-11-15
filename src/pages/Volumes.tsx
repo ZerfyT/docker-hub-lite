@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { InfoIcon, PlusIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 import { VolumeTable } from "@/components/dashboard/VolumeTable";
@@ -86,28 +86,34 @@ export function Volumes() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-16 mb-4 mt-2">
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold flex items-center gap-1.5">
-            Volumes <InfoIcon className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <span className="text-primary font-medium text-sm mt-1 flex gap-2 items-center">
-            {volumes.length} Total
+      {/* Modern Telemetry Banner */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>Storage Volumes</span>
+            <span className="font-mono text-foreground font-bold">{volumes.length} Total</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs font-mono">
+            <span className="text-primary font-semibold">
+              {volumes.length - unusedCount} Attached
+            </span>
             {unusedCount > 0 && (
               <>
-                <span className="text-muted-foreground">/</span>
-                <span className="text-amber-500">{unusedCount} Unused</span>
+                <span className="text-muted-foreground/40">•</span>
+                <span className="text-amber-500 font-semibold">{unusedCount} Unused</span>
               </>
             )}
-          </span>
+          </div>
         </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold flex items-center gap-1.5">
-            Total disk space <InfoIcon className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <span className="text-primary font-medium text-sm mt-1 flex gap-1">
-            {formatBytes(totalSize)}
-          </span>
+
+        <div className="rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm p-4 space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+            <span>Volume Disk Allocation</span>
+            <span className="font-mono text-foreground font-bold">{formatBytes(totalSize)}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Persistent storage space utilized across Docker volumes
+          </p>
         </div>
       </div>
 

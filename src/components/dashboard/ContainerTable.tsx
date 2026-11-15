@@ -32,6 +32,7 @@ import {
   Browsers,
   CopyIcon,
   TrashIcon,
+  CubeIcon,
 } from "@phosphor-icons/react";
 import { invoke } from "@tauri-apps/api/core";
 import {
@@ -154,30 +155,44 @@ export function ContainerTable({ containers, onRefresh, selected = [], onSelecte
   const someSelected = selected?.length > 0 && selected?.length < containers.length;
 
   return (
-    <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden text-sm">
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label="Containers list"
+      className="rounded-xl border border-border/80 bg-card/60 backdrop-blur-sm shadow-xs overflow-x-auto text-sm focus-visible:ring-1 focus-visible:ring-primary focus-visible:outline-none"
+    >
       <Table>
-        <TableHeader className="bg-muted/40">
-          <TableRow>
-            <TableHead className="w-[40px] text-center pl-4">
+        <TableHeader className="bg-muted/50 backdrop-blur-xs sticky top-0 z-10">
+          <TableRow className="border-border/60 hover:bg-transparent">
+            <TableHead className="w-[44px] text-center pl-4">
               <Checkbox
                 checked={allSelected ? true : someSelected ? "indeterminate" : false}
                 onCheckedChange={toggleAll}
+                aria-label="Select all containers"
               />
             </TableHead>
-            <TableHead className="w-[180px] font-semibold">Name</TableHead>
-            <TableHead className="font-semibold w-[120px]">IP Address</TableHead>
-            <TableHead className="font-semibold w-[120px]">Image</TableHead>
-            <TableHead className="font-semibold">Port(s)</TableHead>
-            <TableHead className="font-semibold">Created</TableHead>
-            <TableHead className="font-semibold">Status</TableHead>
-            <TableHead className="text-right font-semibold pr-4">Actions</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[180px]">Name & ID</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[120px]">IP Address</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[160px]">Image</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[120px]">Ports</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[100px]">Created</TableHead>
+            <TableHead className="font-semibold text-foreground min-w-[140px]">Status</TableHead>
+            <TableHead className="text-right font-semibold text-foreground pr-4 min-w-[140px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {containers.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                No containers found.
+              <TableCell colSpan={8} className="py-12 text-center">
+                <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
+                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground border border-border/60">
+                    <CubeIcon className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">No containers found</p>
+                  <p className="text-xs text-muted-foreground">
+                    Launch a new container or deploy a ready-made stack from Dev Starters.
+                  </p>
+                </div>
               </TableCell>
             </TableRow>
           ) : (
@@ -190,40 +205,108 @@ export function ContainerTable({ containers, onRefresh, selected = [], onSelecte
               const networks = c.NetworkSettings?.Networks ? Object.values(c.NetworkSettings.Networks) : [];
               const ip = networks.find(n => n.IPAddress)?.IPAddress || "-";
 
-              const createdDate = c.Created ? new Date(c.Created * 1000).toLocaleDateString() : "-";
+              const createdDate = c.Created ? new Date(c.Created * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : "-";
 
               return (
-                <TableRow key={c.Id} className={`hover:bg-muted/30 transition-colors group cursor-pointer ${isSelected ? "bg-primary/5" : ""}`} onClick={() => navigate(`/containers/${c.Id}`)}>
+                <TableRow
+                  key={c.Id}
+                  className={`hover:bg-muted/40 transition-colors group cursor-pointer border-border/50 ${
+                    isSelected ? "bg-primary/8 hover:bg-primary/12" : ""
+                  }`}
+                  onClick={() => navigate(`/containers/${c.Id}`)}
+                >
                     <TableCell className="pl-4" onClick={(e) => toggleSelection(e, c.Id)}>
                       <Checkbox checked={isSelected} className="pointer-events-none" />
                     </TableCell>
-                    <TableCell className="font-medium border-l border-transparent">
-                      <div className="flex flex-col">
+                    <TableCell className="font-medium">
+                      <div className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500' : isPaused ? 'bg-yellow-500' : 'bg-gray-500'}`}></div>
-                          <span className="truncate max-w-[150px]">{c.Names[0]?.replace("/", "") || "Unnamed"}</span>
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${isRunning ? 'bg-emerald-500 shadow-xs' : isPaused ? 'bg-amber-500' : 'bg-zinc-500'}`}></span>
+                          <span className="font-semibold text-foreground truncate max-w-[160px] group-hover:text-primary transition-colors">
+                            {c.Names[0]?.replace("/", "") || "Unnamed"}
+                          </span>
                         </div>
-                        <span className="text-[10px] text-muted-foreground ml-4">{shortId}</span>
+                        <span className="text-[11px] font-mono text-muted-foreground ml-4">
+                          {shortId}
+                        </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      <span className="cursor-pointer hover:text-primary transition-colors" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(ip); toast.success("IP Copied!"); }} title="Copy IP">
-                        {ip}
+                    <TableCell className="text-muted-foreground font-mono text-xs">
+                      {ip !== "-" ? (
+                        <span
+                          className="cursor-pointer hover:text-primary transition-colors hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(ip);
+                            toast.success("IP copied!");
+                          }}
+                          title="Click to copy IP"
+                        >
+                          {ip}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground/50">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground font-mono text-xs truncate max-w-[160px]" title={c.Image}>
+                      <span className="bg-muted/60 px-1.5 py-0.5 rounded border border-border/50">
+                        {c.Image}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground truncate max-w-[120px]" title={c.Image}>
-                      {c.Image}
+                    <TableCell>
+                      {c.Ports && c.Ports.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {c.Ports.filter(p => p.PublicPort).map((p, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openInBrowser(c);
+                              }}
+                              className="text-[11px] font-mono px-1.5 py-0.2 rounded bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors flex items-center gap-1"
+                              title="Open mapped port in browser"
+                            >
+                              <span>{p.PublicPort}</span>
+                              <Browsers className="w-2.5 h-2.5 opacity-70" />
+                            </button>
+                          ))}
+                          {c.Ports.every(p => !p.PublicPort) && (
+                            <span className="text-xs text-muted-foreground font-mono">
+                              {c.Ports[0].PrivatePort}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground/50 text-xs">-</span>
+                      )}
                     </TableCell>
-                    <TableCell className="text-primary hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); openInBrowser(c); }}>
-                      {c.Ports?.map(p => p.PublicPort ? `${p.PublicPort}:${p.PrivatePort}` : p.PrivatePort).join(", ") || "-"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
                       {createdDate}
                     </TableCell>
                     <TableCell>
-                      <span className="text-xs text-muted-foreground">
-                        {c.Status}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border ${
+                            isRunning
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                              : isPaused
+                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                              : "bg-zinc-500/10 text-zinc-500 dark:text-zinc-400 border-zinc-500/20"
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              isRunning
+                                ? "bg-emerald-500 animate-pulse"
+                                : isPaused
+                                ? "bg-amber-500"
+                                : "bg-zinc-400"
+                            }`}
+                          />
+                          <span className="capitalize">{c.State}</span>
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right pr-4">
                       <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>

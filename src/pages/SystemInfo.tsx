@@ -1,120 +1,147 @@
 import { useStore } from "@/store/useStore";
-import { CubeIcon, StackIcon, HardDrivesIcon, HeartbeatIcon, ActivityIcon, WarningCircleIcon } from "@phosphor-icons/react";
+import { CubeIcon, StackIcon, HardDrivesIcon, PulseIcon, CopyIcon, CpuIcon } from "@phosphor-icons/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { MetricCard } from "@/components/dashboard/MetricCard";
+import { toast } from "sonner";
 
 export function SystemInfo() {
   const { systemInfo, dockerState, dockerStateError, containers, images, volumes } = useStore();
 
+  const isOnline = dockerState === "Running";
+  const runningContainers = containers.filter((c) => c.State === "running").length;
+
+  const copyText = (val: string, label: string) => {
+    navigator.clipboard.writeText(val);
+    toast.success(`${label} copied to clipboard!`);
+  };
+
   return (
-    <div className="max-w-5xl space-y-6">
+    <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">System Information</h2>
-        <p className="text-muted-foreground">Overview of your local Docker engine and resource usage.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">
+          System & Engine Information
+        </h2>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Low-level Docker engine architecture, daemon status, and allocated hardware limits.
+        </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Daemon Status</CardTitle>
-            <ActivityIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dockerState === "Running" ? (
-                <span className="text-green-500 flex items-center gap-2"><HeartbeatIcon className="h-6 w-6" /> Online</span>
-              ) : (
-                <span className="text-red-500 flex items-center gap-2"><WarningCircleIcon className="h-6 w-6" /> Offline</span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {dockerStateError ? dockerStateError : "Engine is responding normally"}
-            </p>
-          </CardContent>
-        </Card>
+      {/* Modern Metric Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Daemon Status"
+          value={isOnline ? "Online" : "Offline"}
+          description={dockerStateError || (isOnline ? "Daemon responding normally" : "Daemon unreachable")}
+          icon={PulseIcon}
+          variant={isOnline ? "emerald" : "default"}
+        />
 
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Containers</CardTitle>
-            <CubeIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{containers.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {containers.filter(c => c.State === "running").length} currently running
-            </p>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Fleet Containers"
+          value={`${runningContainers} / ${containers.length}`}
+          description={`${runningContainers} active, ${containers.length - runningContainers} idle`}
+          icon={CubeIcon}
+          variant="emerald"
+        />
 
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Local Images</CardTitle>
-            <StackIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{images.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {systemInfo?.total_images || 0} images reported by engine
-            </p>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Local Images"
+          value={images.length}
+          description={`${systemInfo?.total_images || images.length} cached layers in engine`}
+          icon={StackIcon}
+          variant="blue"
+        />
 
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Volumes & Storage</CardTitle>
-            <HardDrivesIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{volumes.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {systemInfo?.volume_storage || "No volumes detected"}
-            </p>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Storage Volumes"
+          value={volumes.length}
+          description={systemInfo?.volume_storage || `${volumes.length} named volumes`}
+          icon={HardDrivesIcon}
+          variant="amber"
+        />
       </div>
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Engine Details</CardTitle>
-          <CardDescription>Advanced information returned by the Docker API.</CardDescription>
+      {/* Advanced Engine Details */}
+      <Card className="rounded-xl border border-border/80 bg-card/60 backdrop-blur-sm shadow-xs">
+        <CardHeader className="border-b border-border/50 pb-4">
+          <div className="flex items-center gap-2">
+            <CpuIcon className="h-5 w-5 text-primary" weight="fill" />
+            <CardTitle className="text-base font-semibold text-foreground">
+              Docker Engine Runtime Specifications
+            </CardTitle>
+          </div>
+          <CardDescription className="text-xs text-muted-foreground">
+            Configuration parameters extracted directly from the local Docker daemon socket
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">API Health Check</span>
-                <div className="flex items-center gap-2 mt-1">
-                  {systemInfo?.system_health === "Healthy" ? (
-                    <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">Passed</Badge>
-                  ) : (
-                    <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20">Failed</Badge>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-sm font-medium text-muted-foreground">System Resource Limits</span>
-                <div className="font-medium mt-1">
-                  {systemInfo?.ncpu || "-"} CPUs, {(systemInfo?.mem_total ? (systemInfo.mem_total / (1024 * 1024 * 1024)).toFixed(2) : "-")} GB Memory
-                </div>
+        <CardContent className="p-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-xl border border-border/60 bg-muted/20 space-y-1">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                API Health Status
+              </span>
+              <div className="flex items-center gap-2 pt-1">
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                    systemInfo?.system_health === "Healthy"
+                      ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                      : "bg-destructive/10 text-destructive border-destructive/20"
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      systemInfo?.system_health === "Healthy" ? "bg-emerald-500 animate-pulse" : "bg-destructive"
+                    }`}
+                  />
+                  <span>{systemInfo?.system_health === "Healthy" ? "Verified Passing" : "Degraded"}</span>
+                </span>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-border/50">
-              <div className="bg-muted/30 p-4 rounded-lg font-mono text-sm overflow-x-auto text-muted-foreground">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 max-w-lg">
-                  <div>Docker Version:</div>
-                  <div className="text-foreground">{systemInfo?.server_version || "-"}</div>
-                  <div>Operating System:</div>
-                  <div className="text-foreground">{systemInfo?.operating_system || "-"}</div>
-                  <div>Kernel Version:</div>
-                  <div className="text-foreground">{systemInfo?.kernel_version || "-"}</div>
-                  <div>Storage Driver:</div>
-                  <div className="text-foreground">{systemInfo?.driver || "-"}</div>
-                  <div>Root Directory:</div>
-                  <div className="text-foreground">{systemInfo?.docker_root_dir || "-"}</div>
-                </div>
+            <div className="p-4 rounded-xl border border-border/60 bg-muted/20 space-y-1">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Hardware Limits Assigned
+              </span>
+              <div className="text-sm font-mono font-bold text-foreground pt-1">
+                {systemInfo?.ncpu || "-"} CPU Cores •{" "}
+                {systemInfo?.mem_total ? (systemInfo.mem_total / (1024 * 1024 * 1024)).toFixed(1) : "-"} GB RAM
               </div>
+            </div>
+          </div>
+
+          {/* Key Value Inspector Table */}
+          <div className="rounded-xl border border-border/60 bg-muted/30 overflow-hidden font-mono text-xs">
+            <div className="p-3 bg-muted/50 border-b border-border/50 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Engine Key-Value Parameters
+            </div>
+            <div className="divide-y divide-border/40">
+              {[
+                { label: "Server Version", value: systemInfo?.server_version || "-" },
+                { label: "Operating System", value: systemInfo?.operating_system || "-" },
+                { label: "Kernel Version", value: systemInfo?.kernel_version || "-" },
+                { label: "Storage Driver", value: systemInfo?.driver || "-" },
+                { label: "Docker Root Dir", value: systemInfo?.docker_root_dir || "-" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between p-3 hover:bg-muted/40 transition-colors"
+                >
+                  <span className="text-muted-foreground font-sans font-medium">{item.label}:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-foreground font-bold">{item.value}</span>
+                    {item.value !== "-" && (
+                      <button
+                        type="button"
+                        onClick={() => copyText(item.value, item.label)}
+                        className="text-muted-foreground hover:text-foreground p-1 rounded hover:bg-muted"
+                        title="Copy value"
+                      >
+                        <CopyIcon className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </CardContent>
