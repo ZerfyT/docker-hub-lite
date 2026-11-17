@@ -160,7 +160,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
       {/* Footer / Community */}
       <div className="p-3 border-t border-sidebar-border/50 bg-sidebar/50">
         <a
-          href="https://github.com"
+          href="https://github.com/ZerfyT/docker-hub-lite"
           target="_blank"
           rel="noreferrer"
           className="flex items-center justify-between p-2 rounded-lg hover:bg-sidebar-accent/70 text-xs text-sidebar-foreground/70 hover:text-sidebar-accent-foreground transition-colors group"
