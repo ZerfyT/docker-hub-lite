@@ -54,7 +54,7 @@ export function LogsTab({ containerId }: { containerId: string }) {
 
       setLogs((prev) => {
         const combined = [...prev, ...newLines];
-        return combined.slice(-2000); // Retain last 2000 lines
+        return combined.slice(-1000); // Retain last 1000 lines to keep memory lean
       });
     }).then((fn) => {
       unlisten = fn;

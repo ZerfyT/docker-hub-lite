@@ -10,7 +10,14 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { fetchAllData, fetchFastData, fetchSystemDf, fetchSystemInfo, fetchHostStats, isPolling, pollingInterval, enableTelemetry } = useStore();
+  const isPolling = useStore((s) => s.isPolling);
+  const pollingInterval = useStore((s) => s.pollingInterval);
+  const enableTelemetry = useStore((s) => s.enableTelemetry);
+  const fetchAllData = useStore((s) => s.fetchAllData);
+  const fetchFastData = useStore((s) => s.fetchFastData);
+  const fetchSystemDf = useStore((s) => s.fetchSystemDf);
+  const fetchSystemInfo = useStore((s) => s.fetchSystemInfo);
+  const fetchHostStats = useStore((s) => s.fetchHostStats);
 
   useEffect(() => {
     // Initial fetch of all data

@@ -58,7 +58,8 @@ const systemNav: NavItem[] = [
 ];
 
 export function Sidebar({ className = "" }: SidebarProps) {
-  const { containers, images } = useStore();
+  const containers = useStore((s) => s.containers);
+  const images = useStore((s) => s.images);
 
   const runningCount = containers.filter((c) => c.State === "running").length;
   const imageCount = images.length;
@@ -136,7 +137,7 @@ export function Sidebar({ className = "" }: SidebarProps) {
               Docker Lite
             </h1>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground border border-border/50">
-              v0.1
+              v0.2
             </span>
           </div>
           <p className="text-[11px] text-muted-foreground font-medium">

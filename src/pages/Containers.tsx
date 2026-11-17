@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { RunContainerModal } from "@/components/modals/RunContainerModal";
 
 export function Containers() {
-  const { containers, fetchContainers } = useStore();
+  const containers = useStore((s) => s.containers);
+  const fetchContainers = useStore((s) => s.fetchContainers);
   const [searchQuery, setSearchQuery] = useState("");
   const [showOnlyRunning, setShowOnlyRunning] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);

@@ -10,7 +10,8 @@ import { toast } from "sonner";
 
 export function Stacks() {
   const navigate = useNavigate();
-  const { containers, fetchContainers } = useStore();
+  const containers = useStore((s) => s.containers);
+  const fetchContainers = useStore((s) => s.fetchContainers);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedStack, setExpandedStack] = useState<string | null>(null);
 

@@ -13,7 +13,9 @@ import {
 import { ActivityIcon, CpuIcon, HardDriveIcon } from "@phosphor-icons/react";
 
 export function ResourceChart() {
-  const { hostStatsHistory, latestCpu, latestMemory } = useStore();
+  const hostStatsHistory = useStore((s) => s.hostStatsHistory);
+  const latestCpu = useStore((s) => s.latestCpu);
+  const latestMemory = useStore((s) => s.latestMemory);
   const [activeFilter, setActiveFilter] = useState<"both" | "cpu" | "memory">("both");
   const data = hostStatsHistory;
 

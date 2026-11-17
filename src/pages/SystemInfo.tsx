@@ -5,7 +5,12 @@ import { MetricCard } from "@/components/dashboard/MetricCard";
 import { toast } from "sonner";
 
 export function SystemInfo() {
-  const { systemInfo, dockerState, dockerStateError, containers, images, volumes } = useStore();
+  const systemInfo = useStore((s) => s.systemInfo);
+  const dockerState = useStore((s) => s.dockerState);
+  const dockerStateError = useStore((s) => s.dockerStateError);
+  const containers = useStore((s) => s.containers);
+  const images = useStore((s) => s.images);
+  const volumes = useStore((s) => s.volumes);
 
   const isOnline = dockerState === "Running";
   const runningContainers = containers.filter((c) => c.State === "running").length;

@@ -8,7 +8,8 @@ import { toast } from "sonner";
 import { Command } from "@tauri-apps/plugin-shell";
 
 export function Registries() {
-  const { dockerConfig, fetchDockerConfig } = useStore();
+  const dockerConfig = useStore((s) => s.dockerConfig);
+  const fetchDockerConfig = useStore((s) => s.fetchDockerConfig);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {

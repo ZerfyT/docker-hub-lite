@@ -20,7 +20,9 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function Images() {
-  const { images, fetchImages, systemDf } = useStore();
+  const images = useStore((s) => s.images);
+  const fetchImages = useStore((s) => s.fetchImages);
+  const systemDf = useStore((s) => s.systemDf);
   const [searchQuery, setSearchQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

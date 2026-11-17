@@ -19,7 +19,9 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function Volumes() {
-  const { volumes, fetchVolumes, systemDf } = useStore();
+  const volumes = useStore((s) => s.volumes);
+  const fetchVolumes = useStore((s) => s.fetchVolumes);
+  const systemDf = useStore((s) => s.systemDf);
   const [searchQuery, setSearchQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

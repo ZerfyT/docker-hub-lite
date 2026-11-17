@@ -119,7 +119,9 @@ const STARTERS: DevStarter[] = [
 
 export function DevStarters() {
   const navigate = useNavigate();
-  const { containers, fetchContainers, fetchImages } = useStore();
+  const containers = useStore((s) => s.containers);
+  const fetchContainers = useStore((s) => s.fetchContainers);
+  const fetchImages = useStore((s) => s.fetchImages);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [launchingId, setLaunchingId] = useState<string | null>(null);
   const [customModalOpen, setCustomModalOpen] = useState(false);

@@ -39,7 +39,7 @@ interface VolumeTableProps {
 }
 
 export function VolumeTable({ volumes, onRefresh, selected = [], onSelectedChange }: VolumeTableProps) {
-  const { systemDf } = useStore();
+  const systemDf = useStore((s) => s.systemDf);
   const [volumeToDelete, setVolumeToDelete] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);

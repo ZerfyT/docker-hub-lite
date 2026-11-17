@@ -28,7 +28,7 @@ interface CreateNetworkModalProps {
 }
 
 export function CreateNetworkModal({ open, onOpenChange }: CreateNetworkModalProps) {
-  const { fetchNetworks } = useStore();
+  const fetchNetworks = useStore((s) => s.fetchNetworks);
   const [name, setName] = useState("");
   const [driver, setDriver] = useState("bridge");
   const [loading, setLoading] = useState(false);

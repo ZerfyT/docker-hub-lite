@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 export function Ports() {
   const navigate = useNavigate();
-  const { containers } = useStore();
+  const containers = useStore((s) => s.containers);
   const [searchQuery, setSearchQuery] = useState("");
 
   const allPorts = useMemo(() => {

@@ -21,7 +21,7 @@ interface CreateVolumeModalProps {
 }
 
 export function CreateVolumeModal({ open, onOpenChange }: CreateVolumeModalProps) {
-  const { fetchVolumes } = useStore();
+  const fetchVolumes = useStore((s) => s.fetchVolumes);
   const [name, setName] = useState("");
   const [driver, setDriver] = useState("local");
   const [loading, setLoading] = useState(false);

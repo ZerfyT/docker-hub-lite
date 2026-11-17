@@ -15,7 +15,7 @@ struct AppState {
 }
 
 use serde::{Deserialize, Serialize};
-use sysinfo::System;
+use sysinfo::{CpuRefreshKind, MemoryRefreshKind, RefreshKind, System};
 
 #[derive(Serialize, Deserialize)]
 struct SystemInfo {
@@ -344,13 +344,20 @@ async fn get_container_logs(state: State<'_, AppState>, id: String) -> Result<St
 fn get_host_stats(state: State<'_, AppState>) -> Result<HostStats, String> {
     let mut sys = state.sys_info.lock().map_err(|e| e.to_string())?;
 
-    // Refresh CPU and memory info
+    // Refresh only CPU and memory info
     sys.refresh_cpu_all();
     sys.refresh_memory();
 
+    let total = sys.total_memory();
+    let mem_pct = if total > 0 {
+        (sys.used_memory() as f32 / total as f32) * 100.0
+    } else {
+        0.0
+    };
+
     Ok(HostStats {
         cpu: sys.global_cpu_usage(),
-        memory: (sys.used_memory() as f32 / sys.total_memory() as f32) * 100.0,
+        memory: mem_pct,
     })
 }
 
@@ -1119,8 +1126,12 @@ fn main() {
         })
     });
 
-    // Initialize sysinfo
-    let mut sys = System::new_all();
+    // Initialize sysinfo minimally for CPU and memory only (drastically reduces RAM consumption by avoiding process/disk scans)
+    let mut sys = System::new_with_specifics(
+        RefreshKind::nothing()
+            .with_cpu(CpuRefreshKind::nothing().with_cpu_usage())
+            .with_memory(MemoryRefreshKind::nothing().with_ram()),
+    );
     sys.refresh_cpu_all(); // First refresh to get a baseline
 
     tauri::Builder::default()

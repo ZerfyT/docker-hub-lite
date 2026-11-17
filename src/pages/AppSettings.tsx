@@ -62,35 +62,33 @@ interface PruneConfirmation {
 
 export function AppSettings() {
   const navigate = useNavigate();
-  const {
-    mode,
-    setMode,
-    isPolling,
-    setIsPolling,
-    pollingInterval,
-    setPollingInterval,
-    enableTelemetry,
-    setEnableTelemetry,
-    confirmDestructive,
-    setConfirmDestructive,
-    containerShell,
-    setContainerShell,
-    defaultLogTail,
-    setDefaultLogTail,
-    systemPrune,
-    executeCustomPrune,
-    daemonJson,
-    daemonJsonError,
-    fetchDaemonJson,
-    editDaemonJsonExternal,
-    dockerState,
-    dockerStateError,
-    systemInfo,
-    systemDf,
-    fetchFastData,
-    fetchSystemInfo,
-    fetchSystemDf,
-  } = useStore();
+  const mode = useStore((s) => s.mode);
+  const setMode = useStore((s) => s.setMode);
+  const isPolling = useStore((s) => s.isPolling);
+  const setIsPolling = useStore((s) => s.setIsPolling);
+  const pollingInterval = useStore((s) => s.pollingInterval);
+  const setPollingInterval = useStore((s) => s.setPollingInterval);
+  const enableTelemetry = useStore((s) => s.enableTelemetry);
+  const setEnableTelemetry = useStore((s) => s.setEnableTelemetry);
+  const confirmDestructive = useStore((s) => s.confirmDestructive);
+  const setConfirmDestructive = useStore((s) => s.setConfirmDestructive);
+  const containerShell = useStore((s) => s.containerShell);
+  const setContainerShell = useStore((s) => s.setContainerShell);
+  const defaultLogTail = useStore((s) => s.defaultLogTail);
+  const setDefaultLogTail = useStore((s) => s.setDefaultLogTail);
+  const systemPrune = useStore((s) => s.systemPrune);
+  const executeCustomPrune = useStore((s) => s.executeCustomPrune);
+  const daemonJson = useStore((s) => s.daemonJson);
+  const daemonJsonError = useStore((s) => s.daemonJsonError);
+  const fetchDaemonJson = useStore((s) => s.fetchDaemonJson);
+  const editDaemonJsonExternal = useStore((s) => s.editDaemonJsonExternal);
+  const dockerState = useStore((s) => s.dockerState);
+  const dockerStateError = useStore((s) => s.dockerStateError);
+  const systemInfo = useStore((s) => s.systemInfo);
+  const systemDf = useStore((s) => s.systemDf);
+  const fetchFastData = useStore((s) => s.fetchFastData);
+  const fetchSystemInfo = useStore((s) => s.fetchSystemInfo);
+  const fetchSystemDf = useStore((s) => s.fetchSystemDf);
 
   const [activeTab, setActiveTab] = useState<"general" | "engine" | "storage" | "tools" | "help">("general");
   const [autoStart, setAutoStart] = useState(false);
@@ -251,7 +249,7 @@ export function AppSettings() {
             Engine: {dockerState || "Offline"}
           </Badge>
           <Badge variant="outline" className="font-mono text-xs px-2.5 py-1 border-border/70">
-            v0.1.0-alpha
+            v0.2.0
           </Badge>
         </div>
       </div>

@@ -22,7 +22,7 @@ export function Events() {
       const payload = event.payload;
       setEvents((prev) => {
         const newEvents = [payload, ...prev];
-        return newEvents.slice(0, 1000); // Keep last 1000 events
+        return newEvents.slice(0, 500); // Keep last 500 events to maintain low memory usage
       });
     });
 

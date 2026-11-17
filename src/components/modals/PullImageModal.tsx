@@ -93,7 +93,7 @@ function formatDate(dateStr?: string | null): string {
 }
 
 export function PullImageModal({ open, onOpenChange }: PullImageModalProps) {
-  const { fetchImages } = useStore();
+  const fetchImages = useStore((s) => s.fetchImages);
   const [imageInput, setImageInput] = useState("");
   const [isPulling, setIsPulling] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<string | null>(null);

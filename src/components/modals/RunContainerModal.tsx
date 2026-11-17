@@ -50,7 +50,9 @@ export function RunContainerModal({
   onOpenChange,
   defaultImage = "",
 }: RunContainerModalProps) {
-  const { images, fetchContainers, fetchImages } = useStore();
+  const images = useStore((s) => s.images);
+  const fetchContainers = useStore((s) => s.fetchContainers);
+  const fetchImages = useStore((s) => s.fetchImages);
   const [image, setImage] = useState(defaultImage);
   const [name, setName] = useState("");
   const [restartPolicy, setRestartPolicy] = useState("unless-stopped");

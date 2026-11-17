@@ -14,7 +14,9 @@ import {
 import "@xyflow/react/dist/style.css";
 
 export function NetworkMap() {
-  const { containers, networks, mode } = useStore();
+  const containers = useStore((s) => s.containers);
+  const networks = useStore((s) => s.networks);
+  const mode = useStore((s) => s.mode);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 

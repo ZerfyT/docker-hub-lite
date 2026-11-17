@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function Networks() {
-  const { networks, fetchNetworks } = useStore();
+  const networks = useStore((s) => s.networks);
+  const fetchNetworks = useStore((s) => s.fetchNetworks);
   const [searchQuery, setSearchQuery] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

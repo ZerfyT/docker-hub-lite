@@ -33,7 +33,10 @@ import { RunContainerModal } from "@/components/modals/RunContainerModal";
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const { containers, systemInfo, fetchContainers, systemPrune } = useStore();
+  const containers = useStore((s) => s.containers);
+  const systemInfo = useStore((s) => s.systemInfo);
+  const fetchContainers = useStore((s) => s.fetchContainers);
+  const systemPrune = useStore((s) => s.systemPrune);
   const [pullModalOpen, setPullModalOpen] = useState(false);
   const [runModalOpen, setRunModalOpen] = useState(false);
 

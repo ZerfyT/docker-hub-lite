@@ -8,7 +8,8 @@ import { useStore } from "@/store/useStore";
 import { toast } from "sonner";
 
 export function Logs() {
-  const { containers, dockerState } = useStore();
+  const containers = useStore((s) => s.containers);
+  const dockerState = useStore((s) => s.dockerState);
   const [selectedContainer, setSelectedContainer] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);

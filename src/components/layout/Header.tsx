@@ -15,7 +15,13 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export function Header() {
-  const { dockerState, dockerStateError, mode, setMode, fetchFastData, fetchSystemInfo, fetchSystemDf } = useStore();
+  const dockerState = useStore((s) => s.dockerState);
+  const dockerStateError = useStore((s) => s.dockerStateError);
+  const mode = useStore((s) => s.mode);
+  const setMode = useStore((s) => s.setMode);
+  const fetchFastData = useStore((s) => s.fetchFastData);
+  const fetchSystemInfo = useStore((s) => s.fetchSystemInfo);
+  const fetchSystemDf = useStore((s) => s.fetchSystemDf);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const location = useLocation();
   const pathName = location.pathname.split("/").filter(Boolean).pop() || "Dashboard";
