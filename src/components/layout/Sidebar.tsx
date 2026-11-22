@@ -9,7 +9,6 @@ import {
   GearIcon,
   GithubLogoIcon,
   StarIcon,
-  BoatIcon,
   PlugsIcon,
   ActivityIcon,
   GraphIcon,
@@ -128,8 +127,8 @@ export function Sidebar({ className = "" }: SidebarProps) {
     >
       {/* Brand Header */}
       <div className="p-4 flex items-center gap-3 border-b border-sidebar-border/40">
-        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center text-primary shadow-xs glow-primary">
-          <BoatIcon size={22} weight="fill" />
+        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 flex items-center justify-center text-primary shadow-xs glow-primary overflow-hidden">
+          <img src="/logo.svg" alt="Docker Lite" className="h-7 w-7 object-contain" />
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5">

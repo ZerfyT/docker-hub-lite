@@ -249,7 +249,7 @@ export function AppSettings() {
             Engine: {dockerState || "Offline"}
           </Badge>
           <Badge variant="outline" className="font-mono text-xs px-2.5 py-1 border-border/70">
-            v0.2.0
+            v0.2.2
           </Badge>
         </div>
       </div>

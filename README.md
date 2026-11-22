@@ -3,7 +3,7 @@
   <p><strong>A lightning-fast, ultra-lightweight Docker desktop client and container studio built with Tauri v2, Rust, and React 19.</strong></p>
 
   <p>
-    <a href="https://github.com/ZerfyT/docker-hub-lite/releases"><img src="https://img.shields.io/badge/version-0.2.0-blue.svg?style=flat-square" alt="Version 0.2.0" /></a>
+    <a href="https://github.com/ZerfyT/docker-hub-lite/releases"><img src="https://img.shields.io/badge/version-0.2.2-blue.svg?style=flat-square" alt="Version 0.2.2" /></a>
     <img src="https://img.shields.io/badge/Tauri-v2-24C8DB?logo=tauri&logoColor=white&style=flat-square" alt="Tauri v2" />
     <img src="https://img.shields.io/badge/Rust-2021-black?logo=rust&logoColor=white&style=flat-square" alt="Rust" />
     <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black&style=flat-square" alt="React 19" />
@@ -50,7 +50,7 @@ Comprehensive container inspection with 4 real-time telemetry charts (CPU utiliz
 
 ## ⚖️ Docker Lite vs. Standard Docker Desktop
 
-| Feature / Metric | 🐳 Docker Lite (v0.2.0) | 🐋 Standard Docker Desktop |
+| Feature / Metric | 🐳 Docker Lite | 🐋 Standard Docker Desktop |
 | :--- | :--- | :--- |
 | **Idle Memory Footprint** | **~30 MB – 80 MB RAM** (ultra-light native webview + Rust) | **1.2 GB – 3.5 GB+ RAM** (Electron + Chromium + VM processes) |
 | **Startup Speed** | **< 0.5 seconds** (instant native launch) | **15 – 45 seconds** (slow VM boot & Electron init) |
@@ -192,9 +192,31 @@ Safe, granular storage reclamation studio with dedicated confirmation alerts:
 
 | Platform | Supported Formats | Minimum Requirement |
 | :--- | :--- | :--- |
-| **Linux (Ubuntu, Debian, Fedora, Arch)** | `.deb`, `.AppImage` | WebKit2GTK 4.1+ |
+| **Linux (Ubuntu, Debian, Fedora, Arch)** | `.snap` (Ubuntu Store), `.deb`, `.AppImage` | WebKit2GTK 4.1+ |
 | **macOS (Apple Silicon & Intel Universal)** | `.dmg`, `.app` | macOS 10.15+ (Catalina) |
 | **Windows** | `.exe` (NSIS Installer) | Windows 10/11 (WebView2) |
+
+---
+
+## 🛍️ Ubuntu Store & Linux Installation
+
+Docker Lite supports both **Snap** (Ubuntu Store / App Center) and native **Debian (`.deb`)** packages. For detailed instructions on publishing to the Ubuntu Store, see the [Ubuntu Store Publishing Guide](docs/UBUNTU_STORE_PUBLISHING.md).
+
+### Option 1: Install from the Ubuntu Snap Store
+```bash
+# Install Docker Lite
+sudo snap install docker-lite
+
+# Connect the Docker daemon socket interface
+sudo snap connect docker-lite:docker
+```
+
+### Option 2: Install via Debian Package (`.deb`)
+Download the `.deb` file from the [latest release](https://github.com/ZerfyT/docker-hub-lite/releases), then install:
+```bash
+sudo apt install ./docker-lite_0.2.2_amd64.deb
+```
+*(Or double-click the `.deb` file to open and install via the native **Ubuntu App Center** with full AppStream metadata and screenshots).*
 
 ---
 
@@ -246,9 +268,10 @@ The resulting packages will be generated under:
 ## 🤖 Automated CI/CD Releases
 
 Docker Lite features an automated GitHub Actions release workflow ([.github/workflows/release.yml](.github/workflows/release.yml)):
-- Builds native bundles for **Linux (Ubuntu x86_64)**, **macOS (Universal Apple Silicon + Intel)**, and **Windows (x86_64)**.
+- Builds native bundles for **Linux (Ubuntu x86_64: `.deb`, `.AppImage`)**, **macOS (Universal Apple Silicon + Intel: `.dmg`)**, and **Windows (x86_64: `.exe`)**.
+- Builds and packages `.snap` for the **Ubuntu Snap Store** using Snapcraft and automatically publishes to the `candidate` channel.
 - Compiles with full release optimizations, Link-Time Optimization (LTO), and dependency caching.
-- Automatically generates draft GitHub releases with all installer assets whenever a version tag (`v*`) is pushed.
+- Automatically generates draft GitHub releases with all installer assets (`.deb`, `.AppImage`, `.snap`, `.dmg`, `.exe`) whenever a version tag (`v*`) is pushed.
 
 ---
 

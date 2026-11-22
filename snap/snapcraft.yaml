@@ -1,0 +1,99 @@
+name: docker-lite
+base: core22
+version: '0.2.2'
+summary: Ultra-lightweight Docker desktop client and container studio
+description: |
+  Docker Lite is a modern, ultra-fast container management studio engineered
+  with Tauri v2, Rust, and React 19.
+
+  Connecting directly to your native local Docker socket with zero intermediate
+  virtual machines, Docker Lite starts in less than 0.5 seconds and idles at only
+  30MB to 80MB of RAM.
+
+  Features:
+  - Real-time 1-second host telemetry (CPU & RAM live utilization graphs)
+  - Full container fleet management (start, stop, restart, pause, kill, commit, terminal exec)
+  - 7 deep diagnostic tabs: live logs, environment variables, 4 hardware telemetry charts,
+    filesystem tree browser, terminal shell exec, volume mounts, and raw inspect JSON
+  - Smart online image puller with Docker Hub search, auto-suggestions, and layer progress
+  - Targeted storage cleanup studio with safe confirmation alerts for images, volumes,
+    build cache, stopped containers, and unused networks
+  - Interactive network topology diagram powered by XYFlow
+  - 1-click developer stacks: PostgreSQL, Redis, MongoDB, MySQL, RabbitMQ, Mailpit, Nginx
+  - Real-time engine event stream monitoring and tailing logs
+  - Glare-free, high-contrast OKLCH Light and Dark themes
+
+grade: stable
+confinement: strict
+compression: xz
+
+apps:
+  docker-lite:
+    command: bin/docker-lite
+    extensions: [gnome]
+    desktop: usr/share/applications/docker-lite.desktop
+    plugs:
+      - network
+      - network-bind
+      - home
+      - docker
+      - opengl
+      - removable-media
+
+parts:
+  docker-lite:
+    plugin: nil
+    source: .
+    build-packages:
+      - libwebkit2gtk-4.1-dev
+      - libgtk-3-dev
+      - libayatana-appindicator3-dev
+      - librsvg2-dev
+      - libssl-dev
+      - libsoup-3.0-dev
+      - libjavascriptcoregtk-4.1-dev
+      - curl
+      - wget
+      - file
+      - build-essential
+      - pkg-config
+    stage-packages:
+      - libwebkit2gtk-4.1-0
+      - libayatana-appindicator3-1
+      - librsvg2-common
+      - libsoup-3.0-0
+    override-build: |
+      # 1. Ensure Rust stable is in PATH
+      if ! command -v cargo >/dev/null 2>&1; then
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+        export PATH="$HOME/.cargo/bin:$PATH"
+      fi
+
+      # 2. Ensure Bun is in PATH
+      if ! command -v bun >/dev/null 2>&1; then
+        curl -fsSL https://bun.sh/install | bash
+        export PATH="$HOME/.bun/bin:$PATH"
+      fi
+
+      # 3. Build frontend assets
+      bun install --frozen-lockfile || bun install
+      bun run build
+
+      # 4. Build optimized Rust release binary
+      cd src-tauri
+      cargo build --release
+      cd ..
+
+      # 5. Install executable and assets to snapcraft install directory
+      install_dir="${CRAFT_PART_INSTALL:-$SNAPCRAFT_PART_INSTALL}"
+      mkdir -p "$install_dir/bin"
+      cp src-tauri/target/release/docker-lite "$install_dir/bin/"
+
+      mkdir -p "$install_dir/usr/share/applications"
+      cp snap/gui/docker-lite.desktop "$install_dir/usr/share/applications/"
+
+      mkdir -p "$install_dir/usr/share/icons/hicolor/512x512/apps"
+      cp snap/gui/icon.png "$install_dir/usr/share/icons/hicolor/512x512/apps/docker-lite.png"
+
+      mkdir -p "$install_dir/usr/share/metainfo"
+      cp src-tauri/resources/com.nipun.docker-lite.metainfo.xml "$install_dir/usr/share/metainfo/"

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "docker-lite",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "identifier": "com.nipun.docker-lite",
   "build": {
     "beforeDevCommand": "bun run dev",
@@ -13,10 +13,10 @@
     "windows": [
       {
         "title": "Docker Lite - Container Studio",
-        "width": 1320,
-        "height": 860,
-        "minWidth": 980,
-        "minHeight": 640,
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 768,
         "resizable": true,
         "center": true,
         "fullscreen": false,
@@ -52,10 +52,14 @@
       "deb": {
         "depends": [
           "libwebkit2gtk-4.1-0 | libwebkit2gtk-4.0-37",
-          "libappindicator3-1",
+          "libayatana-appindicator3-1 | libappindicator3-1",
           "librsvg2-common"
         ],
-        "section": "devel"
+        "section": "devel",
+        "priority": "optional",
+        "files": {
+          "usr/share/metainfo/com.nipun.docker-lite.metainfo.xml": "resources/com.nipun.docker-lite.metainfo.xml"
+        }
       },
       "appimage": {
         "bundleMediaFramework": false

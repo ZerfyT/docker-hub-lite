@@ -841,7 +841,7 @@ dependencies = [
 
 [[package]]
 name = "docker-lite"
-version = "0.2.0"
+version = "0.2.2"
 dependencies = [
  "bollard",
  "dirs 7.0.0",

@@ -1,0 +1,300 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- Drop Shadow Filter for Squircle -->
+    <filter id="squircle-shadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="24" stdDeviation="32" flood-color="#000000" flood-opacity="0.55" />
+    </filter>
+
+    <!-- Container Glow Filter -->
+    <filter id="cyan-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Background Gradients -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="45%" stop-color="#0a1224" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <linearGradient id="border-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.4" />
+      <stop offset="40%" stop-color="#1e293b" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.15" />
+    </linearGradient>
+
+    <radialGradient id="center-glow" cx="50%" cy="52%" r="48%">
+      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.32" />
+      <stop offset="60%" stop-color="#0369a1" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#020617" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Whale Body Gradients -->
+    <linearGradient id="whale-grad" x1="10%" y1="20%" x2="90%" y2="80%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="35%" stop-color="#0ea5e9" />
+      <stop offset="85%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+
+    <linearGradient id="whale-belly" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#bae6fd" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Container Gradients -->
+    <!-- Primary Cyan Box -->
+    <linearGradient id="box-cyan-front" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="box-cyan-top" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7dd3fc" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+    <linearGradient id="box-cyan-side" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0369a1" />
+      <stop offset="100%" stop-color="#075985" />
+    </linearGradient>
+
+    <!-- Emerald Box (Accenting Stacks) -->
+    <linearGradient id="box-emerald-front" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="box-emerald-top" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6ee7b7" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+    <linearGradient id="box-emerald-side" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#065f46" />
+    </linearGradient>
+
+    <!-- Amber Box -->
+    <linearGradient id="box-amber-front" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="box-amber-top" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a" />
+      <stop offset="100%" stop-color="#fbbf24" />
+    </linearGradient>
+    <linearGradient id="box-amber-side" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b45309" />
+      <stop offset="100%" stop-color="#92400e" />
+    </linearGradient>
+
+    <!-- Wave Gradients -->
+    <linearGradient id="wave-grad-1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0" />
+      <stop offset="40%" stop-color="#38bdf8" stop-opacity="0.8" />
+      <stop offset="70%" stop-color="#06b6d4" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0" />
+    </linearGradient>
+
+    <linearGradient id="wave-grad-2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" stop-opacity="0" />
+      <stop offset="50%" stop-color="#0284c7" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Subtle Lightning/Speed Spark for "Lite" -->
+    <linearGradient id="spark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="60%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+  </defs>
+
+  <!-- 1. Background Squircle with Shadow -->
+  <g filter="url(#squircle-shadow)">
+    <rect x="80" y="80" width="864" height="864" rx="200" fill="url(#bg-grad)" />
+    <!-- Inner Rim Stroke -->
+    <rect x="82" y="82" width="860" height="860" rx="198" fill="none" stroke="url(#border-grad)" stroke-width="3" />
+  </g>
+
+  <!-- 2. Ambient Core Glow -->
+  <circle cx="512" cy="512" r="380" fill="url(#center-glow)" />
+
+  <!-- 3. Dynamic Hydrofoil / Ocean Wave Rays Beneath the Whale -->
+  <g opacity="0.9">
+    <!-- Secondary Deep Wave -->
+    <path d="M 180 750 C 320 730, 480 770, 640 735 C 740 715, 800 730, 844 745" fill="none" stroke="url(#wave-grad-2)" stroke-width="5" stroke-linecap="round" />
+    
+    <!-- Primary Fast Wake Wave -->
+    <path d="M 210 715 C 340 690, 470 725, 620 695 C 720 675, 770 690, 820 705" fill="none" stroke="url(#wave-grad-1)" stroke-width="8" stroke-linecap="round" />
+
+    <!-- Water Spray / Speed Dash -->
+    <path d="M 260 740 C 320 725, 380 735, 440 725" fill="none" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="3" stroke-linecap="round" />
+  </g>
+
+  <!-- 4. The Whale Body -->
+  <!-- Sleek, modern geometric whale floating gracefully with a dynamic posture -->
+  <g id="whale-silhouette">
+    <!-- Whale Body Path -->
+    <path d="
+      M 790 495
+      C 820 480, 845 445, 840 405
+      C 835 365, 800 375, 785 395
+      C 775 350, 740 355, 725 385
+      C 720 415, 735 445, 735 470
+      C 735 490, 715 515, 690 525
+      L 580 545
+      L 290 545
+      C 260 545, 230 555, 210 575
+      C 180 605, 175 645, 195 675
+      C 220 710, 275 725, 330 725
+      C 480 725, 630 675, 725 615
+      C 765 590, 780 550, 785 510
+      Z
+    " fill="url(#whale-grad)" />
+
+    <!-- Whale Underbelly Highlight / Texture -->
+    <path d="
+      M 210 575
+      C 180 605, 175 645, 195 675
+      C 220 710, 275 725, 330 725
+      C 480 725, 630 675, 725 615
+      C 690 620, 600 645, 480 645
+      C 340 645, 250 620, 210 575
+      Z
+    " fill="url(#whale-belly)" />
+
+    <!-- Whale Pectoral Fin -->
+    <path d="
+      M 430 635
+      C 460 670, 500 690, 545 695
+      C 555 696, 560 690, 555 682
+      C 535 655, 495 635, 455 628
+      Z
+    " fill="#0284c7" opacity="0.85" />
+    <path d="
+      M 430 635
+      C 455 665, 490 682, 530 687
+      C 505 665, 475 645, 445 632
+      Z
+    " fill="#38bdf8" opacity="0.6" />
+
+    <!-- Whale Friendly Eye -->
+    <circle cx="255" cy="625" r="9" fill="#0b1120" />
+    <circle cx="253" cy="623" r="3.5" fill="#f8fafc" />
+    <circle cx="258" cy="627" r="1.5" fill="#38bdf8" />
+  </g>
+
+  <!-- 5. Iconic Docker Stack of 3D Shipping Containers -->
+  <!-- Clean isometric / perspective block system with top, front, side faces -->
+  <g id="container-grid">
+
+    <!-- ========== TIER 1 (BOTTOM ROW): 4 CONTAINERS ========== -->
+    <!-- Box 1-1 (Leftmost, Emerald) -->
+    <g transform="translate(290, 465)">
+      <!-- Top Face -->
+      <polygon points="6,0 60,0 74,-12 20,-12" fill="url(#box-emerald-top)" />
+      <!-- Side Face -->
+      <polygon points="60,0 74,-12 74,48 60,60" fill="url(#box-emerald-side)" />
+      <!-- Front Face -->
+      <rect x="0" y="0" width="60" height="60" rx="4" fill="url(#box-emerald-front)" />
+      <!-- Vertical Container Ribs -->
+      <line x1="15" y1="8" x2="15" y2="52" stroke="#047857" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="30" y1="8" x2="30" y2="52" stroke="#047857" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="45" y1="8" x2="45" y2="52" stroke="#047857" stroke-width="2.5" stroke-linecap="round" />
+    </g>
+
+    <!-- Box 1-2 (Cyan) -->
+    <g transform="translate(370, 465)">
+      <!-- Top Face -->
+      <polygon points="6,0 60,0 74,-12 20,-12" fill="url(#box-cyan-top)" />
+      <!-- Side Face -->
+      <polygon points="60,0 74,-12 74,48 60,60" fill="url(#box-cyan-side)" />
+      <!-- Front Face -->
+      <rect x="0" y="0" width="60" height="60" rx="4" fill="url(#box-cyan-front)" />
+      <!-- Ribs -->
+      <line x1="15" y1="8" x2="15" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="30" y1="8" x2="30" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="45" y1="8" x2="45" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+    </g>
+
+    <!-- Box 1-3 (Cyan) -->
+    <g transform="translate(450, 465)">
+      <!-- Top Face -->
+      <polygon points="6,0 60,0 74,-12 20,-12" fill="url(#box-cyan-top)" />
+      <!-- Side Face -->
+      <polygon points="60,0 74,-12 74,48 60,60" fill="url(#box-cyan-side)" />
+      <!-- Front Face -->
+      <rect x="0" y="0" width="60" height="60" rx="4" fill="url(#box-cyan-front)" />
+      <!-- Ribs -->
+      <line x1="15" y1="8" x2="15" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="30" y1="8" x2="30" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="45" y1="8" x2="45" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+    </g>
+
+    <!-- Box 1-4 (Rightmost, Amber) -->
+    <g transform="translate(530, 465)">
+      <!-- Top Face -->
+      <polygon points="6,0 60,0 74,-12 20,-12" fill="url(#box-amber-top)" />
+      <!-- Side Face -->
+      <polygon points="60,0 74,-12 74,48 60,60" fill="url(#box-amber-side)" />
+      <!-- Front Face -->
+      <rect x="0" y="0" width="60" height="60" rx="4" fill="url(#box-amber-front)" />
+      <!-- Ribs -->
+      <line x1="15" y1="8" x2="15" y2="52" stroke="#b45309" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="30" y1="8" x2="30" y2="52" stroke="#b45309" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="45" y1="8" x2="45" y2="52" stroke="#b45309" stroke-width="2.5" stroke-linecap="round" />
+    </g>
+
+    <!-- ========== TIER 2 (MIDDLE ROW): 3 CONTAINERS ========== -->
+    <!-- Box 2-1 (Cyan) -->
+    <g transform="translate(370, 385)">
+      <polygon points="6,0 60,0 74,-12 20,-12" fill="url(#box-cyan-top)" />
+      <polygon points="60,0 74,-12 74,48 60,60" fill="url(#box-cyan-side)" />
+      <rect x="0" y="0" width="60" height="60" rx="4" fill="url(#box-cyan-front)" />
+      <line x1="15" y1="8" x2="15" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="30" y1="8" x2="30" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="45" y1="8" x2="45" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+    </g>
+
+    <!-- Box 2-2 (Bright Cyan Highlight) -->
+    <g transform="translate(450, 385)">
+      <polygon points="6,0 60,0 74,-12 20,-12" fill="url(#box-cyan-top)" />
+      <polygon points="60,0 74,-12 74,48 60,60" fill="url(#box-cyan-side)" />
+      <rect x="0" y="0" width="60" height="60" rx="4" fill="url(#box-cyan-front)" />
+      <line x1="15" y1="8" x2="15" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="30" y1="8" x2="30" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="45" y1="8" x2="45" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+    </g>
+
+    <!-- Box 2-3 (Cyan) -->
+    <g transform="translate(530, 385)">
+      <polygon points="6,0 60,0 74,-12 20,-12" fill="url(#box-cyan-top)" />
+      <polygon points="60,0 74,-12 74,48 60,60" fill="url(#box-cyan-side)" />
+      <rect x="0" y="0" width="60" height="60" rx="4" fill="url(#box-cyan-front)" />
+      <line x1="15" y1="8" x2="15" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="30" y1="8" x2="30" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="45" y1="8" x2="45" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+    </g>
+
+    <!-- ========== TIER 3 (TOP ROW): 1 PINNACLE CONTAINER ========== -->
+    <!-- Box 3-1 (Top Center, Glowing Cyan) -->
+    <g transform="translate(450, 305)" filter="url(#cyan-glow)">
+      <polygon points="6,0 60,0 74,-12 20,-12" fill="url(#box-cyan-top)" />
+      <polygon points="60,0 74,-12 74,48 60,60" fill="url(#box-cyan-side)" />
+      <rect x="0" y="0" width="60" height="60" rx="4" fill="url(#box-cyan-front)" />
+      <line x1="15" y1="8" x2="15" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="30" y1="8" x2="30" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+      <line x1="45" y1="8" x2="45" y2="52" stroke="#0369a1" stroke-width="2.5" stroke-linecap="round" />
+    </g>
+  </g>
+
+  <!-- 6. Lite Spout / Speed Bolt (Representing "Lite" agility and performance) -->
+  <g transform="translate(225, 520)">
+    <!-- Small energetic spout drops -->
+    <circle cx="20" cy="-35" r="5" fill="#7dd3fc" opacity="0.8" />
+    <circle cx="36" cy="-55" r="7" fill="#38bdf8" opacity="0.9" />
+    <circle cx="15" cy="-70" r="4.5" fill="#bae6fd" opacity="0.7" />
+    <!-- Dynamic spray arc -->
+    <path d="M 30 -15 C 32 -40, 20 -60, 5 -75" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" opacity="0.6" />
+  </g>
+
+</svg>

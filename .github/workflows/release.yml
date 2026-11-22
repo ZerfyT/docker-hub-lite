@@ -8,13 +8,14 @@ on:
 
 jobs:
   publish-tauri:
+    name: 'Build Multiplatform (${{ matrix.platform }})'
     permissions:
       contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Linux configuration (Ubuntu x86_64)
+          # Linux configuration (Ubuntu x86_64: Deb & AppImage)
           - platform: 'ubuntu-22.04'
             args: ''
             rust-target: 'x86_64-unknown-linux-gnu'
@@ -24,7 +25,7 @@ jobs:
             args: '--target universal-apple-darwin'
             rust-target: 'aarch64-apple-darwin,x86_64-apple-darwin'
 
-          # Windows configuration (Windows x86_64)
+          # Windows configuration (Windows x86_64: NSIS)
           - platform: 'windows-latest'
             args: ''
             rust-target: 'x86_64-pc-windows-msvc'
@@ -52,7 +53,7 @@ jobs:
         with:
           workspaces: 'src-tauri -> target'
 
-      # Linux system dependencies required by Tauri v2, WebKit, AppImage, and RPM bundling
+      # Linux system dependencies required by Tauri v2, WebKit, AppImage, and Debian bundling
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -77,7 +78,7 @@ jobs:
       - name: Install frontend dependencies
         run: bun install --frozen-lockfile
 
-      # Build the application and generate release bundles
+      # Build the application and generate release bundles (.deb, .AppImage, .dmg, .exe)
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
@@ -89,3 +90,42 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+  publish-snap:
+    name: 'Build & Publish Snap (Ubuntu Store)'
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Build the Snap package using Snapcraft
+      - name: Build Snap package
+        uses: snapcore/action-build@v1
+        id: snapcraft
+
+      # Upload the .snap file as a workflow artifact
+      - name: Upload Snap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-lite-snap
+          path: ${{ steps.snapcraft.outputs.snap }}
+
+      # Publish directly to the Ubuntu Snap Store (when SNAPCRAFT_STORE_CREDENTIALS secret is provided)
+      - name: Publish to Ubuntu Snap Store
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: ${{ steps.snapcraft.outputs.snap }}
+          release: candidate
+
+      # Attach the .snap binary to the GitHub Release draft
+      - name: Attach Snap to GitHub Release Draft
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.ref_name }} ${{ steps.snapcraft.outputs.snap }} --clobber || true

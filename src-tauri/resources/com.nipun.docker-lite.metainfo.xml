@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.nipun.docker-lite</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Docker Lite</name>
+  <summary>Ultra-fast, lightweight Docker desktop client and container studio</summary>
+  <description>
+    <p>
+      Docker Lite is a modern, resource-efficient container management studio built with Tauri v2, Rust, and React 19. Designed as a high-performance alternative to traditional Electron-based desktop clients, Docker Lite connects directly to your local Docker socket without running an extra virtualization layer, consuming only 30MB to 80MB of RAM.
+    </p>
+    <p>Key features include:</p>
+    <ul>
+      <li>Continuous 1-second host hardware telemetry (CPU &amp; RAM live area charts)</li>
+      <li>Instant container lifecycle control (start, stop, restart, pause, kill, commit, terminal exec)</li>
+      <li>Smart online image puller with Docker Hub search, auto-suggestions, and live layer progress</li>
+      <li>Targeted storage cleanup studio for images, volumes, build caches, and networks</li>
+      <li>Interactive network topology visualizer powered by XYFlow</li>
+      <li>1-click developer starter stacks for PostgreSQL, Redis, MongoDB, MySQL, RabbitMQ, Mailpit, and Nginx</li>
+      <li>Real-time engine event stream monitoring and streaming container logs</li>
+      <li>Eye-friendly OKLCH-calibrated Light and Dark themes</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">docker-lite.desktop</launchable>
+  <url type="homepage">https://github.com/ZerfyT/docker-hub-lite</url>
+  <url type="bugtracker">https://github.com/ZerfyT/docker-hub-lite/issues</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/ZerfyT/docker-hub-lite/main/docs/screenshots/dashboard-dark.png</image>
+      <caption>System Overview Dashboard in Dark Mode</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/ZerfyT/docker-hub-lite/main/docs/screenshots/dashboard-light.jpg</image>
+      <caption>System Overview Dashboard in Light Mode</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/ZerfyT/docker-hub-lite/main/docs/screenshots/containers-fleet.png</image>
+      <caption>Container Fleet Management</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/ZerfyT/docker-hub-lite/main/docs/screenshots/container-telemetry-details.png</image>
+      <caption>Container Telemetry &amp; Hardware Gauges</caption>
+    </screenshot>
+  </screenshots>
+  <categories>
+    <category>Development</category>
+    <category>System</category>
+    <category>Utility</category>
+  </categories>
+  <provides>
+    <binary>docker-lite</binary>
+  </provides>
+  <releases>
+    <release version="0.2.2" date="2026-11-17">
+      <description>
+        <p>Milestone 0.2.2 release featuring dramatic memory optimizations, code-split bundles, OKLCH themes, smart image puller with online suggestions, targeted prune modals, and multiplatform installers.</p>
+      </description>
+    </release>
+    <release version="0.1.0" date="2026-03-01">
+      <description>
+        <p>Initial release of Docker Lite container studio.</p>
+      </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1" />
+</component>
